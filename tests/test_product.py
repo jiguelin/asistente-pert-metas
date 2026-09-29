@@ -4,7 +4,7 @@ import unittest
 
 from pert_assistant import _user_visible_question_count
 from pdf_export import export_pdf
-from pert_core import PlanError, audit_plan, summary
+from pert_core import PlanError, audit_plan, audit_with_scale, summary
 from progress import export_progress, import_progress
 
 
@@ -39,6 +39,20 @@ def sample_plan():
 
 
 class ProductTests(unittest.TestCase):
+    def test_physical_scale_changes_without_losing_work(self):
+        from datetime import date, timedelta
+        plan = sample_plan()
+        plan['periodos'] = [{'inicio': (date(2026, 10, 1) + timedelta(days=i)).isoformat(),
+                             'fin': (date(2026, 10, 1) + timedelta(days=i)).isoformat()} for i in range(31)]
+        plan['materiales']['papelografos_disponibles'] = 3
+        original = json.loads(json.dumps(plan))
+        result = audit_with_scale(plan)
+        self.assertLessEqual(result['motor']['papelografos'], 3)
+        self.assertEqual(plan, original)
+        for field in plan:
+            if field != 'periodos':
+                self.assertEqual(result['plan'][field], original[field])
+
     def test_complete_verified_inventory_and_pdf(self):
         audited = audit_plan(sample_plan())
         self.assertEqual(audited["notas_totales"], 6)
@@ -82,6 +96,11 @@ class ProductTests(unittest.TestCase):
     def test_question_check(self):
         self.assertEqual(_user_visible_question_count("¿Cuál es tu Meta Principal?"), 1)
         self.assertEqual(_user_visible_question_count("¿Cuándo empiezas? ¿Cuándo terminas?"), 2)
+
+    def test_pending_answer_survives_export_and_old_files_still_load(self):
+        loaded = import_progress(export_progress([], None, 'Publicidad máximo S/40.'))
+        self.assertEqual(loaded['pending_text'], 'Publicidad máximo S/40.')
+        self.assertIsNone(import_progress(b'{"schema_version":1,"messages":[],"final":null}')['pending_text'])
 
 
 if __name__ == "__main__":

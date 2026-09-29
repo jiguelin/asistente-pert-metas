@@ -6,7 +6,8 @@ montage unless the deterministic checker and output inventory agree.
 from __future__ import annotations
 
 from collections import Counter, defaultdict
-from datetime import date
+from datetime import date, timedelta
+from copy import deepcopy
 from typing import Any
 
 from motor_pert import verificar
@@ -20,6 +21,35 @@ class PlanError(ValueError):
 
 REQUIRED = {"inicio", "fin", "periodos", "notas", "sesiones", "capacidad",
             "dependencias", "conexiones", "materiales", "pendientes"}
+
+
+def audit_with_scale(plan: dict[str, Any]) -> dict[str, Any]:
+    """Coarsen only the physical calendar when the original layout cannot fit."""
+    try:
+        result = audit_plan(plan)
+        if result['motor']['papelografos'] <= plan['materiales'].get('papelografos_disponibles', float('inf')):
+            return result
+        original = PlanError(['El montaje necesita más papelógrafos que los disponibles'])
+    except PlanError as exc:
+        original = exc
+        if not any('pared' in p or 'No cabe' in p for p in exc.problems):
+            raise
+    candidate = deepcopy(plan)
+    cursor, end = date.fromisoformat(plan['inicio']), date.fromisoformat(plan['fin'])
+    periods = []
+    while cursor <= end:
+        following = date(cursor.year + (cursor.month == 12), cursor.month % 12 + 1, 1)
+        finish = min(end, following - timedelta(days=1))
+        periods.append({'inicio': cursor.isoformat(), 'fin': finish.isoformat()})
+        cursor = finish + timedelta(days=1)
+    candidate['periodos'] = periods
+    try:
+        result = audit_plan(candidate)
+        if result['motor']['papelografos'] <= candidate['materiales'].get('papelografos_disponibles', float('inf')):
+            return result
+    except PlanError:
+        pass
+    raise original
 
 
 def _assert_schema(plan: dict[str, Any]) -> None:

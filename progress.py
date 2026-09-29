@@ -8,8 +8,9 @@ VERSION = 1
 MAX_BYTES = 3_000_000
 
 
-def export_progress(messages: list[dict], final: dict | None) -> bytes:
-    data = {"schema_version": VERSION, "messages": messages, "final": final}
+def export_progress(messages: list[dict], final: dict | None, pending_text: str | None = None) -> bytes:
+    data = {"schema_version": VERSION, "messages": messages, "final": final,
+            "pending_text": pending_text}
     raw = json.dumps(data, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
     if len(raw) > MAX_BYTES:
         raise ValueError("Avance demasiado grande")
@@ -39,4 +40,7 @@ def import_progress(raw: bytes) -> dict[str, Any]:
             raise ValueError("Plan inválido en el avance")
         # Never trust a saved ok flag or old coordinates.
         final = audit_plan(final["plan"])
-    return {"messages": msgs, "final": final}
+    pending = data.get('pending_text')
+    if pending is not None and (not isinstance(pending, str) or len(pending) > 12000):
+        raise ValueError('Mensaje pendiente inválido')
+    return {"messages": msgs, "final": final, "pending_text": pending}

@@ -22,10 +22,14 @@ def load_assistant_revision(signature):
     # Streamlit may refresh app.py while retaining imported Python modules.
     # Reload once per source revision, across sessions, before starting a turn.
     import intake
+    import motor_pert
+    import pert_core
     import progress
     import pdf_export
     import pert_assistant
     importlib.reload(intake)
+    importlib.reload(motor_pert)
+    importlib.reload(pert_core)
     importlib.reload(progress)
     importlib.reload(pdf_export)
     return importlib.reload(pert_assistant)
@@ -33,7 +37,7 @@ def load_assistant_revision(signature):
 
 _source_root = Path(__file__).resolve().parent
 _revision = sha256(b"".join((_source_root / name).read_bytes()
-                          for name in ("intake.py", "pert_assistant.py", "progress.py", "pdf_export.py"))).hexdigest()
+                          for name in ("motor_pert.py", "pert_core.py", "intake.py", "pert_assistant.py", "progress.py", "pdf_export.py"))).hexdigest()
 _assistant = load_assistant_revision(_revision)
 AssistantError = _assistant.AssistantError
 respond = _assistant.respond
@@ -107,7 +111,8 @@ with st.sidebar:
         st.session_state.usage = {"input_tokens": 0, "output_tokens": 0, "audio_seconds": 0.0}
         st.rerun()
     try:
-        progress_bytes = export_progress(st.session_state.messages, st.session_state.final)
+        progress_bytes = export_progress(st.session_state.messages, st.session_state.final,
+                                         st.session_state.get('pending_text'))
         st.download_button("Guardar avance", progress_bytes,
                            file_name="mi_pert_avance.json", mime="application/json",
                            use_container_width=True)
@@ -123,7 +128,7 @@ with st.sidebar:
                 loaded = import_progress(raw)
                 st.session_state.messages = loaded["messages"]
                 st.session_state.final = loaded["final"]
-                st.session_state.pending_text = None
+                st.session_state.pending_text = loaded['pending_text']
                 st.session_state.last_error = None
                 st.session_state.known_facts = {}
                 st.session_state.loaded_fingerprint = fingerprint

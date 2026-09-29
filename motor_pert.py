@@ -39,6 +39,7 @@ Si no cabe con esta plantilla, devuelve bloqueo; no elimina notas.
 from datetime import date, timedelta
 from collections import Counter, defaultdict
 from math import floor
+from functools import lru_cache
 
 def _d(s):
     return date.fromisoformat(s)
@@ -153,6 +154,7 @@ def verificar(p):
         available = W-2*margin-(zone if final else 0)
         cw=available/k; slots=floor((cw-3)/(w+gap)); allowed=floor(.70*slots)
         return h+gap<=rowh and (not final or mh<=H-top-bottom) and allowed>0 and all(max(counts[i].values(),default=0)<=allowed for i in range(first,first+k))
+    @lru_cache(maxsize=None)
     def solve(first):
         if first==len(periods): return []
         options=[]

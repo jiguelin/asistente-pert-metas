@@ -10,7 +10,7 @@ from typing import Any
 
 from openai import OpenAI
 
-from pert_core import PlanError, audit_plan, summary
+from pert_core import PlanError, audit_plan, audit_with_scale, summary
 from intake import SCHEMA as INTAKE_SCHEMA, PROMPT as INTAKE_PROMPT, context, normalize, stage, QUESTIONS, calculations
 
 TRACE = ContextVar("pert_qa_trace", default=None)
@@ -158,6 +158,7 @@ def review(client,model,messages,candidate,math_facts,phase,usage):
       'No vuelvas a restar una reserva ya descontada en un saldo libre intermedio. '
       'Revisar gastos de un mes ya pagado no equivale a restarlos otra vez; rechaza solo si realmente recalcula o exige ese gasto adicional. '
       'En tareas exige todas las fechas/minutos/frecuencias dentro de disponibilidad, sin tareas recurrentes duplicadas. '
+      'En español usa fechas ISO o día/mes/año. Nunca mes/día: 10/04 no puede representar el 4 de octubre. '
       'En final verifica coherencia semántica de TODO el plan: inventario aprobado completo, evidencia autónoma, '
       'reserva y gastos ya pagados, insumos previos, todas las sesiones y cada conexión causal/apoyo necesaria. '
       'La geometría, dimensiones y fechas principales ya fueron comparadas por código con los datos confirmados. No inventes errores de esos campos. '
@@ -200,6 +201,7 @@ POR EVENTO (simulacro26→corrección27, corrección29→prueba30), no una depen
 global que espere el final del recurrente. Conserva cada sesión y minuto.
 contexto puede resumir situación actual, sin convertir conocimiento previo en post-it.
 NO inventes una medida confirmada, disponibilidad, cálculo, reserva, fecha ni apoyo.
+Todas las fechas, incluso dentro de detalle, frecuencia y criterio, son ISO YYYY-MM-DD; nunca MM/DD.
 No reduzcas sesiones, flechas o notas para pasar el verificador. Revisa sentido,
 calendario, insumos consumidos, horas simultáneas, presupuesto y restricciones.
 Si falta un dato esencial, responde {"pendientes":["dato específico faltante"]}, sin
@@ -235,7 +237,8 @@ def build_final(client: OpenAI, model: str, messages: list[dict[str, str]],
             if principal and principal not in ['ninguno','ningún obstáculo','no tengo obstáculos']:
                 if sum(n.get('tipo')=='O' and n.get('principal') is True for n in plan['notas'])!=1:
                     raise PlanError(['Marca principal:true en exactamente un obstáculo O, el declarado por el alumno'])
-            audit = audit_plan(plan)
+            audit = audit_with_scale(plan)
+            plan = audit['plan']
             facts=snapshot['facts']
             if plan['inicio']!=facts['inicio'] or plan['fin']!=facts['fin']:
                 raise PlanError(['Las fechas principales deben ser exactamente las aportadas por el alumno'])
