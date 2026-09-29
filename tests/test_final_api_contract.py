@@ -1,11 +1,20 @@
 import json
 import unittest
 from types import SimpleNamespace
-from unittest.mock import patch
-from pert_assistant import build_final
+from unittest.mock import patch, MagicMock
+from pert_assistant import build_final, _create
 from test_product import sample_plan
 
 class FinalApiContractTests(unittest.TestCase):
+    def test_interrupted_stream_retries_once(self):
+        client=MagicMock();first=MagicMock();second=MagicMock()
+        first.__enter__.return_value.get_final_response.side_effect=RuntimeError("Didn't receive a `response.completed` event.")
+        expected=SimpleNamespace(output_text='completo',usage=None)
+        second.__enter__.return_value.get_final_response.return_value=expected
+        client.responses.stream.side_effect=[first,second]
+        self.assertIs(_create(client,model='test'),expected)
+        self.assertEqual(client.responses.stream.call_count,2)
+
     def test_json_mode_request_contains_json_in_input(self):
         facts={key:'dato conocido' for key in ['meta','situacion','obstaculos','principal','habilidades','apoyos','disponibilidad']}
         facts.update(inicio='2026-10-01',fin='2026-10-31',mini_aprobadas='true',tareas_aprobadas='true',papel='[90,60]',nota='[3.8,3.8]',meta_nota='[15,15]',papeles='3',pared='300')

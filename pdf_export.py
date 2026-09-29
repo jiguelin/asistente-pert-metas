@@ -107,6 +107,13 @@ def export_pdf(audit: dict) -> bytes:
                       f"{d['capacidad_fila']-d['maximo_usado']} plazas libres "
                       "en la fila más ocupada.", body))
 
+    if plan.get('finanzas') and plan.get('caja'):
+        out.append(_p('Dinero reservado y libre', heading))
+        out.append(_p('El saldo incluye el dinero reservado. Solo la columna libre queda disponible después de separar las obligaciones previstas.', body))
+        rows=[['Fecha','Saldo','Reservado','Libre']]+[[r['fecha'],f"{r['saldo']:.2f}",f"{r['reserva']:.2f}",f"{r['libre']:.2f}"] for r in plan['caja']]
+        table=Table(rows,colWidths=[5*cm,4*cm,4*cm,4*cm],repeatRows=1,hAlign='LEFT')
+        table.setStyle(TableStyle([('FONTNAME',(0,0),(-1,-1),font),('FONTSIZE',(0,0),(-1,-1),9),('BACKGROUND',(0,0),(-1,0),colors.HexColor('#EDF3F6')),('GRID',(0,0),(-1,-1),.3,colors.HexColor('#CAD5DC')),('TOPPADDING',(0,0),(-1,-1),5),('BOTTOMPADDING',(0,0),(-1,-1),5)]))
+        out.append(table)
     out.append(PageBreak())
     out.append(_p("Inventario y leyenda completa", title))
     out.append(_p("Fila 1: resultados. Fila 2: tareas. Fila 3: habilidades. "

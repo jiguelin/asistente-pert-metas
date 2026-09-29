@@ -224,8 +224,7 @@ try:
                 elif missing and missing[0] != "No se pudo completar la verificación interna del montaje":
                     reply = missing[0] if missing[0].startswith('¿') else "Para terminar el plan, ¿puedes precisar " + missing[0].rstrip(" .?") + "?"
                 else:
-                    reply = ("Aún no puedo verificar el montaje completo. "
-                             "Guarda tu avance; no pegues las notas como plan definitivo todavía.")
+                    raise AssistantError("Todavía no pude verificar el montaje completo. Puedes reintentar tu mensaje con el botón de abajo; tu avance se conserva.")
         st.markdown(reply)
         st.session_state.messages.append({"role": "assistant", "content": reply})
         st.session_state.pending_text = None

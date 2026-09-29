@@ -89,6 +89,17 @@ class UiTests(unittest.TestCase):
         self.assertEqual(exported[-1]['messages'][-1]['content'],'¿En qué fecha empiezas?')
         self.assertEqual(len(exported[-1]['messages']),2)
 
+    def test_quality_block_offers_retry_and_never_exports_final_pdf(self):
+        at=AppTest.from_file(APP)
+        at.secrets['EVENT_PASSWORD']='metas';at.secrets['OPENAI_API_KEY']='not-used'
+        at.run();at.text_input[0].input('metas').run();at.button[0].click().run()
+        with patch('pert_assistant.respond',return_value=('Verificando',True,{})),patch('pert_assistant.build_final',return_value=(None,['No se pudo completar la verificación interna del montaje'],{})):
+            at.chat_input[0].set_value('Sí, acepto.').run()
+        self.assertEqual(at.session_state.pending_text,'Sí, acepto.')
+        self.assertIsNone(at.session_state.final)
+        self.assertTrue(any(b.label=='Reintentar mi mensaje' for b in at.button))
+        self.assertFalse(at.exception)
+
 
 if __name__ == "__main__":
     unittest.main()

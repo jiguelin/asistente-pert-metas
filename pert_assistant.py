@@ -11,7 +11,7 @@ from typing import Any
 from openai import OpenAI
 
 from pert_core import PlanError, audit_plan, audit_with_scale, summary
-from intake import SCHEMA as INTAKE_SCHEMA, PROMPT as INTAKE_PROMPT, context, normalize, stage, QUESTIONS, calculations
+from intake import SCHEMA as INTAKE_SCHEMA, PROMPT as INTAKE_PROMPT, context, normalize, stage, QUESTIONS, calculations, cash_schedule
 
 TRACE = ContextVar("pert_qa_trace", default=None)
 ROOT = Path(__file__).resolve().parent
@@ -45,7 +45,7 @@ def _user_visible_question_count(reply: str) -> int:
     return max(reply.count("¿"), reply.count("?"))
 
 
-def _create(client: OpenAI, **kwargs: Any):
+def _create(client: OpenAI, _stream_retry=True, **kwargs: Any):
     # SDK call isolated for test doubles and future model migration.
     started = time.monotonic()
     # Consume server events while reasoning and generating; no partial draft
@@ -59,11 +59,13 @@ def _create(client: OpenAI, **kwargs: Any):
             body=getattr(exc,'body',{}) or {}
             if isinstance(body,dict):
                 body=body.get('error',body)
-            message=body.get('message','') if isinstance(body,dict) else ''
+            message=(body.get('message','') if isinstance(body,dict) else '') or str(exc)
             message=re.sub(r'sk-[\w-]+','[REDACTADO]',str(message))
             trace.append({'step':kwargs.get('text',{}).get('format',{}).get('name','plan'),
                           'error':type(exc).__name__,'status':getattr(exc,'status_code',None),
                           'message':message[:600],'seconds':round(time.monotonic()-started,2)})
+        if _stream_retry and isinstance(exc,RuntimeError) and 'response.completed' in str(exc):
+            return _create(client,_stream_retry=False,**kwargs)
         raise
     trace = TRACE.get()
     if trace is not None:
@@ -233,6 +235,10 @@ def build_final(client: OpenAI, model: str, messages: list[dict[str, str]],
             plan['contexto']={'situacion_actual':snapshot['facts'].get('situacion',''),
                               'obstaculo_principal':snapshot['facts'].get('principal','')}
             plan['materiales']['papelografos_disponibles']=int(snapshot['facts']['papeles'])
+            cash=cash_schedule(snapshot['facts'])
+            if cash is not None:
+                plan['finanzas']=True
+                plan['caja']=cash
             principal=snapshot['facts'].get('principal','').lower()
             if principal and principal not in ['ninguno','ningún obstáculo','no tengo obstáculos']:
                 if sum(n.get('tipo')=='O' and n.get('principal') is True for n in plan['notas'])!=1:

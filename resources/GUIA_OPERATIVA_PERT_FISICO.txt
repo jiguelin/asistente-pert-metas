@@ -116,3 +116,7 @@ No afirmar “listo/definitivo” si falta: criterio esencial de la meta, fecha 
 Fechas públicas ISO YYYY-MM-DD o día/mes/año. Nunca usar mes/día; 10/04 no significa 4 de octubre en español.
 Si una escala semanal no cabe, comprobar meses naturales completos o parciales, conservando cada nota, sesión, fecha y flecha. La aplicación puede ajustar únicamente las columnas y posiciones; no elimina trabajo. Reauditar densidad y límites antes de mostrar el PDF.
 La cantidad de papelógrafos disponibles no obliga a usarlos todos. Destacar exactamente el obstáculo principal declarado con una estrella en su nota rosa.
+
+15. RESERVAS INTERMEDIAS Y COURIER
+En cada cobro de fin de mes, separar los gastos del mes siguiente antes de llamar libre al saldo; no restar esa misma reserva otra vez del saldo. Con saldo inicial 1500, octubre pagado, ingreso2200 y gasto1200: octubre saldo3700/reserva1200/libre2500; noviembre4700/1200/3500; diciembre5700/1200/4500. El cierre no garantiza liquidez anterior: comprobar también cada saldo intermedio.
+Para una entrega normal con posible reposición, calcular hacia atrás desde el último día de entrega hábil antes del límite. Respetar recogida, tránsito, llegada del reemplazo, empaque nuevo, reenvío y comprobación final. Todos los cobros normales preceden a sus envíos; la fecha de un hito es un límite, no permiso para cobrar después del último envío. Las tareas variables necesitan cantidades, fechas y minutos concretos.
