@@ -1,10 +1,10 @@
 # Asistente PERT Chart de Metas — app para el taller
 
-**Estado:** prototipo ejecutable con nueve pruebas locales aprobadas y código preparado para GitHub privado. No se ha conectado aún a una cuenta de API ni probado en teléfonos reales. No compartir con alumnos hasta completar la lista de lanzamiento.
+**Estado:** revisión de calidad en curso. Las cuatro conversaciones de la primera versión detectaron errores de calendario, flujo financiero y finalización. Esta revisión corrige el flujo y tiene 14 pruebas locales aprobadas; falta aprobar las cuatro conversaciones completas con API real y comprobar audio en teléfonos. No compartir con alumnos todavía.
 
 ## Qué hace
 
-- Chat con una sola pregunta por turno, basado en las instrucciones PERT 0.3.6 y su guía.
+- Chat con una sola pregunta por turno, basado en INSTRUCTIONS_APP.txt y la guía operativa v7, con registro de hechos acreditados y secuencia controlada.
 - Entrada de texto o grabación desde el micrófono; la respuesta es escrita.
 - El asistente propone mini metas y tareas. Antes del montaje final, genera un plan estructurado y ejecuta `motor_pert.verificar(plan)`; si falla, no lo declara definitivo.
 - Descarga el resultado completo en PDF y el avance en JSON. Tras cerrar o recargar, el alumno puede volver a importar su JSON.
@@ -33,7 +33,7 @@ python -m streamlit run app.py
 
 ## Controles de calidad y límites conocidos
 
-El motor comprueba días inclusivos, continuidad de periodos, sesiones, carga por día/semana, dependencias, flujo/reserva financiera y posiciones geométricas. El modelo debe revisar sentido y evidencia. Si el modelo no genera un plan que supere la validación en tres intentos, la app conserva el borrador y bloquea el PDF definitivo. La app todavía **no garantiza** que cada mini meta sea semánticamente suficiente ni que todas las relaciones causales estén presentes: hay que verificarlo en conversaciones reales.
+El motor comprueba días inclusivos, continuidad de periodos, sesiones, carga por día/semana, dependencias, flujo/reserva financiera y posiciones geométricas. El modelo debe revisar sentido y evidencia. Si el modelo no genera un plan que supere la validación en tres intentos, la app conserva el borrador y bloquea el PDF definitivo. Un segundo control interno revisa los borradores antes de mostrarlos, incluyendo criterio, calendario, tareas y coherencia semántica. Las pruebas con API real siguen siendo necesarias.
 
 El archivo de avance debe descargarse antes de cerrar la página. No hay cuentas ni recuperación automática. La app no envía correo ni WhatsApp automáticamente: el alumno descarga el PDF y lo adjunta desde su teléfono. No hay versión BYOK en este paquete; tendría que usar otro despliegue sin la clave del organizador.
 
@@ -44,6 +44,10 @@ python -m unittest discover -s tests -v
 ```
 
 `tests/test_product.py` prueba un inventario completo, el PDF, bloqueo por fechas/capacidad, y restauración con revalidación. `tests/test_streamlit.py` prueba la contraseña, su rotación y una pregunta inicial con API simulada. Estas pruebas **no** sustituyen pruebas de punta a punta con un modelo real.
+
+## Modelo
+
+El modelo de planificación por defecto es gpt-5.4. Se configura con PERT_MODEL; OPENAI_MODEL pertenece al prototipo anterior. No hay límite de presupuesto ni turnos.
 
 ## Archivos de referencia
 

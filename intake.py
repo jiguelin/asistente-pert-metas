@@ -1,0 +1,133 @@
+"""Evidence-backed intake and calculations before the next teaching step."""
+import calendar
+import json
+from datetime import date, timedelta
+from decimal import Decimal
+
+KEYS = '''meta criterio inicio fin situacion obstaculos principal habilidades apoyos disponibilidad papel nota meta_nota pared papeles tipo saldo ingreso gasto cobro_fin_mes gastos_inicio_pagados reserva objetivo unidades precio costo empaque publicidad reposicion reposicion_caja reposicion_empaque reposicion_envio mini_aprobadas tareas_aprobadas'''.split()
+SCHEMA = {"type":"object","properties":{
+    "ambiguedad_esencial":{"type":["string","null"]},
+    "meta_verificable":{"type":"boolean"},
+    "hechos":{"type":"array","items":{"type":"object","properties":{
+        "campo":{"type":"string","enum":KEYS},"valor":{"type":"string"},
+        "usuario":{"type":"integer"},"cita":{"type":"string"}},
+        "required":["campo","valor","usuario","cita"],"additionalProperties":False}}
+},"required":["ambiguedad_esencial","meta_verificable","hechos"],"additionalProperties":False}
+
+PROMPT = '''Extrae datos para un PERT físico, sin redactar respuesta al alumno ni hacer planes.
+Usa SOLO hechos declarados por el usuario o propuestas concretas que este aceptó.
+Cada hecho lleva índice usuario (U0, U1...) y cita literal corta de ese mensaje.
+No conviertas su silencio o una solicitud de continuar en aceptación de fechas inventadas.
+No inventes fechas, habilidades, apoyos, medidas ni cifras. Reutiliza todos los datos adelantados.
+Fechas inicio/fin: ISO con año. Importes: número sin moneda ni separadores de miles.
+papel/nota/meta_nota: JSON [ancho,alto] en cm. pared/papeles: número.
+tipo: ahorro si la meta exige dinero libre; empresa si exige ganancia comercial; otro si no.
+cobro_fin_mes/gastos_inicio_pagados: true o false. No asumas false cuando no se sabe.
+saldo=dinero inicial libre; ingreso/gasto=mensuales; reserva=dinero final intocable;
+objetivo=umbral libre; empresa: unidades,precio,costo unitario,empaque unitario,
+publicidad total y costos de reposicion_caja/empaque/envio o reposicion total si explícito.
+Un gasto ya pagado en el mes inicial NO se vuelve a restar. Una reserva no elimina un costo.
+Meta verificable: hay resultado observable, cantidad o evidencia suficiente. Aclara solo
+ambigüedad ESENCIAL que cambia la verificación. «Caminar 5 km seguidos con buena energía»
+ya es verificable; energía no exige otra métrica. «Reporte profesional» solo, no lo es.
+criterio: conserva los requisitos reales sin añadir otros. habilidades son las necesarias
+para superar el obstáculo, no convertir situación actual en una habilidad futura.
+«Ningún obstáculo» / «ningún apoyo» son hechos válidos. No inferir principal de una lista.
+mini_aprobadas=true solo si el usuario aceptó una propuesta con mini metas M1... en
+resultados verificables, fechas y evidencia. tareas_aprobadas=true solo si aceptó el
+cronograma con IDs, fechas, frecuencia y minutos; aceptar una lista sin esos datos NO basta.
+Una aprobación de propuesta concreta puede acreditar sus valores: cita la aceptación,
+pero nunca acredita algo que no figuraba en la propuesta. «Propón el cronograma» no lo aprueba.
+Si cambia un criterio o la fecha, invalidar aprobaciones afectadas. Valores faltantes: omitir hecho.
+Devuelve exclusivamente el JSON del esquema. contexto con mensajes A=asistente, U=usuario:
+'''
+
+
+def context(messages):
+    users=[]; lines=[]
+    for m in messages:
+        if m['role']=='user':
+            users.append(m['content']);label=f'U{len(users)-1}'
+        else:label='A'
+        lines.append(label+': '+m['content'])
+    return users,'\n'.join(lines)
+
+
+def normalize(payload, users):
+    facts={}
+    for h in payload['hechos']:
+        i=h['usuario'];q=h['cita']
+        if 0 <= i < len(users) and q and q in users[i]:
+            facts[h['campo']]=h['valor']
+    return {**payload,'facts':facts}
+
+
+def stage(snapshot):
+    f=snapshot['facts']
+    if not f.get('meta'):return 'meta'
+    if not snapshot['meta_verificable'] or snapshot['ambiguedad_esencial']:return 'criterio'
+    for key in ['inicio','fin']:
+        if key not in f:return key
+        try:date.fromisoformat(f[key])
+        except ValueError:return key
+    if date.fromisoformat(f['fin']) < date.fromisoformat(f['inicio']):return 'fin'
+    for key in ['situacion','obstaculos','principal','habilidades','apoyos','disponibilidad']:
+        if key not in f:return key
+    if f.get('mini_aprobadas')!='true':return 'mini'
+    if f.get('tareas_aprobadas')!='true':return 'tareas'
+    for key in ['papel','nota','meta_nota','papeles','pared']:
+        if key not in f:return key
+    return 'final'
+
+
+QUESTIONS={
+ 'meta':'¿Cuál es tu Meta Principal?',
+ 'inicio':'¿En qué fecha quieres empezar, con día, mes y año?',
+ 'fin':'¿Cuál es tu fecha límite, con día, mes y año?',
+ 'situacion':'¿Cuál es tu situación actual respecto a esta meta?',
+ 'obstaculos':'¿Qué obstáculos podrían impedir que alcances esta meta?',
+ 'principal':'De esos obstáculos, ¿cuál es el principal para ti?',
+ 'habilidades':'¿Qué habilidad necesitas desarrollar para superar ese obstáculo?',
+ 'apoyos':'¿Con qué personas o recursos puedes contar para lograrlo?',
+ 'disponibilidad':'¿Qué tiempo tienes disponible para trabajar en esta meta?',
+ 'papel':'¿Qué tamaño tienen tus papelógrafos, en centímetros?',
+ 'nota':'¿Qué tamaño tienen tus post-it pequeños ya cortados, en centímetros?',
+ 'meta_nota':'¿Qué tamaño tiene el post-it grande de tu Meta Principal?',
+ 'papeles':'¿Cuántos papelógrafos tienes disponibles?',
+ 'pared':'¿Qué ancho disponible tienes para colocar los papelógrafos juntos?'
+}
+
+
+def calculations(f):
+    out=[]
+    if f.get('inicio') and f.get('fin'):
+        a=date.fromisoformat(f['inicio']);b=date.fromisoformat(f['fin'])
+        if b < a:return 'ERROR: fecha límite anterior al inicio.'
+        n=(b-a).days+1
+        scale='días' if n<=14 else 'semanas' if n<=65 else 'meses'
+        out.append(f'CALENDARIO CALCULADO: inicio {a}, fin {b}, {n} días inclusivos; escala provisional {scale}.')
+        if n<=370:
+            weekdays=['lunes','martes','miércoles','jueves','viernes','sábado','domingo']
+            out.append('Fechas y días reales: '+', '.join(f'{a+timedelta(days=k)} {weekdays[(a+timedelta(days=k)).weekday()]}' for k in range(n)))
+        needed=['saldo','ingreso','gasto','reserva','objetivo','gastos_inicio_pagados','cobro_fin_mes']
+        if f.get('tipo')=='ahorro' and all(k in f for k in needed) and f['cobro_fin_mes']=='true':
+            months=[];d=a.replace(day=1)
+            while d<=b:
+                pay=d.replace(day=calendar.monthrange(d.year,d.month)[1])
+                if a<=pay<=b:months.append(pay)
+                d=(d.replace(day=28)+timedelta(days=4)).replace(day=1)
+            count=len(months);expenses=count-(1 if f['gastos_inicio_pagados']=='true' else 0)
+            balance=Decimal(f['saldo'])+count*Decimal(f['ingreso'])-max(0,expenses)*Decimal(f['gasto'])
+            free=balance-Decimal(f['reserva']);gap=max(Decimal(0),Decimal(f['objetivo'])-free)
+            out.append(f'FLUJO CALCULADO: saldo inicial {f["saldo"]}; {count} cobros de {f["ingreso"]}; {max(0,expenses)} gastos mensuales PENDIENTES de {f["gasto"]}; saldo final {balance}; reserva {f["reserva"]}; libre {free}; brecha {gap}. No descontar el mes inicial pagado otra vez.')
+    if f.get('tipo')=='empresa' and all(k in f for k in ['unidades','precio','costo','empaque','publicidad']):
+        n=Decimal(f['unidades']);net=n*(Decimal(f['precio'])-Decimal(f['costo'])-Decimal(f['empaque']))-Decimal(f['publicidad'])
+        out.append(f'UTILIDAD CALCULADA sin reposición: {net}. Reserva adicional no mejora la utilidad.')
+        repl=None
+        if 'reposicion' in f:repl=Decimal(f['reposicion'])
+        elif all(k in f for k in ['reposicion_caja','reposicion_empaque','reposicion_envio']):repl=sum(Decimal(f[k]) for k in ['reposicion_caja','reposicion_empaque','reposicion_envio'])
+        if repl is not None:out.append(f'Costo total de una reposición {repl}; utilidad con UNA reposición {net-repl}.')
+    if all(k in f for k in ['papel','meta_nota']):
+        w,h=json.loads(f['papel']);mw,mh=json.loads(f['meta_nota']);zone=max(18,mw+3)
+        out.append(f'GEOMETRÍA CALCULADA: ancho útil de periodos {w-6} cm en papeles previos, {w-6-zone} cm en el final; zona MP x={w-3-zone} a {w-3}. No entregar montaje antes del motor.')
+    return '\n'.join(out)

@@ -54,8 +54,10 @@ if not api_key:
     st.error("El asistente aún no tiene configurada la API. Contacta al organizador.")
     st.stop()
 
-client = OpenAI(api_key=api_key, timeout=55, max_retries=1)
-model = secret("OPENAI_MODEL", "gpt-5.4-mini")
+client = OpenAI(api_key=api_key, timeout=180, max_retries=1)
+# PERT_MODEL selects the quality-tested model; the prototype OPENAI_MODEL setting
+# is intentionally superseded so existing deployments receive the quality fix.
+model = secret("PERT_MODEL", "gpt-5.4")
 transcription_model = secret("TRANSCRIPTION_MODEL", "gpt-transcribe")
 audio_seconds_limit = int(secret("MAX_AUDIO_SECONDS", 90))
 st.session_state.setdefault("messages", [])
@@ -68,6 +70,7 @@ with st.sidebar:
         st.session_state.messages = []
         st.session_state.final = None
         st.session_state.pending_text = None
+        st.session_state.last_error = None
         st.session_state.usage = {"input_tokens": 0, "output_tokens": 0, "audio_seconds": 0.0}
         st.rerun()
     try:
@@ -88,6 +91,7 @@ with st.sidebar:
                 st.session_state.messages = loaded["messages"]
                 st.session_state.final = loaded["final"]
                 st.session_state.pending_text = None
+                st.session_state.last_error = None
                 st.session_state.loaded_fingerprint = fingerprint
                 st.rerun()
             except ValueError as exc:
@@ -111,11 +115,12 @@ if st.session_state.final:
     except Exception:
         st.error("No se pudo generar el PDF. Guarda tu avance y avisa al organizador.")
 
+retry = st.session_state.pop("retry_requested", False)
+if st.session_state.get("last_error"):
+    st.error(st.session_state.last_error)
 if st.session_state.get("pending_text"):
     st.warning("Tu último mensaje quedó pendiente y puedes reenviarlo sin volver a escribirlo.")
-    retry = st.button("Reintentar mi mensaje", use_container_width=True)
-else:
-    retry = False
+    retry = st.button("Reintentar mi mensaje", use_container_width=True) or retry
 submitted = st.chat_input("Escribe o habla para responder", accept_audio=True,
                           max_chars=6000, max_upload_size=10)
 if retry:
@@ -152,6 +157,8 @@ try:
     if not text:
         st.stop()
     st.session_state.pending_text = text
+    st.session_state.last_error = None
+    st.session_state.final = None
     st.session_state.messages.append({"role": "user", "content": text})
     with st.chat_message("user"):
         st.markdown(text)
@@ -171,28 +178,32 @@ try:
                     st.session_state.final = audit
                     reply = final_message(audit)
                 elif missing and missing[0] != "No se pudo completar la verificación interna del montaje":
-                    reply = "Para terminar el plan, ¿puedes precisar " + missing[0].rstrip(" .?") + "?"
+                    reply = missing[0] if missing[0].startswith('¿') else "Para terminar el plan, ¿puedes precisar " + missing[0].rstrip(" .?") + "?"
                 else:
                     reply = ("Aún no puedo verificar el montaje completo. "
                              "Guarda tu avance; no pegues las notas como plan definitivo todavía.")
         st.markdown(reply)
         st.session_state.messages.append({"role": "assistant", "content": reply})
         st.session_state.pending_text = None
-        if st.session_state.final:
-            st.rerun()
+        # Refresh the download bytes after EVERY successful turn, not only final.
+        st.rerun()
 except (ValueError, AssistantError) as exc:
-    st.error(str(exc))
+    st.session_state.last_error = str(exc)
     if st.session_state.messages and st.session_state.messages[-1] == {"role": "user", "content": st.session_state.get("pending_text")}:
         st.session_state.messages.pop()
+    st.rerun()
 except RateLimitError:
-    st.error("La API no tiene saldo disponible o alcanzó temporalmente su capacidad. El organizador puede recargar y luego puedes reintentar tu mensaje.")
+    st.session_state.last_error = "La API no tiene saldo disponible o alcanzó temporalmente su capacidad. El organizador puede recargar y luego puedes reintentar tu mensaje."
     if st.session_state.messages and st.session_state.messages[-1] == {"role": "user", "content": st.session_state.get("pending_text")}:
         st.session_state.messages.pop()
+    st.rerun()
 except APIError:
-    st.error("No se pudo obtener la respuesta ahora. Reintenta tu mensaje; tu avance anterior sigue disponible.")
+    st.session_state.last_error = "No se pudo obtener la respuesta ahora. Reintenta tu mensaje; tu avance anterior sigue disponible."
     if st.session_state.messages and st.session_state.messages[-1] == {"role": "user", "content": st.session_state.get("pending_text")}:
         st.session_state.messages.pop()
+    st.rerun()
 except Exception:
-    st.error("Ocurrió un problema. Guarda el avance y avisa al organizador.")
+    st.session_state.last_error = "Ocurrió un problema. Guarda el avance y avisa al organizador."
     if st.session_state.messages and st.session_state.messages[-1] == {"role": "user", "content": st.session_state.get("pending_text")}:
         st.session_state.messages.pop()
+    st.rerun()
