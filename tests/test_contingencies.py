@@ -11,14 +11,10 @@ from pert_core import PlanError, audit_plan
 
 
 def company_case():
-    # Use the recorded draft and user facts; replay never calls a model or API.
-    trace_path = Path(__file__).resolve().parents[2] / "qa_results/empresa_v11/plan.trace.json"
-    trace = json.loads(trace_path.read_text())
-    plan = json.loads([entry["output"] for entry in trace if entry["step"] == "plan"][-1])
-    facts = {item["campo"]: item["valor"]
-             for entry in trace if entry["step"] == "pert_intake"
-             for item in json.loads(entry["output"])["hechos"]}
-    facts["minutos_semana"] = "[30,30,30,30,30,60,30]"
+    # The fictional case travels with the tests; no conversation or API needed.
+    fixture_path = Path(__file__).resolve().parent / "fixtures/empresa_reposicion.json"
+    fixture = json.loads(fixture_path.read_text(encoding="utf-8"))
+    plan, facts = fixture["plan"], fixture["facts"]
     plan["capacidad"] = capacity_schedule(facts)
     compile_replacement(plan, facts)
     return plan, facts

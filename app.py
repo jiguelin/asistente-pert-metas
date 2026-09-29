@@ -204,7 +204,7 @@ try:
     with st.chat_message("user"):
         st.markdown(text)
     with st.chat_message("assistant"):
-        with st.spinner("Preparando tu siguiente paso..."):
+        with st.spinner("Preparando tu siguiente paso...", show_time=True):
             _assistant.TRACE.set(st.session_state.qa_trace if st.query_params.get("qa") == "1" else None)
             reply, finalize, usage = respond(client, model, st.session_state.messages,
                                              datetime.now(ZoneInfo("America/Lima")).date().isoformat(),

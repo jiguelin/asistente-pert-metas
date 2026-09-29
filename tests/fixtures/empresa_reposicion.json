@@ -1,0 +1,927 @@
+{
+  "plan": {
+    "inicio": "2026-10-01",
+    "fin": "2026-11-15",
+    "periodos": [
+      {
+        "inicio": "2026-10-01",
+        "fin": "2026-10-04"
+      },
+      {
+        "inicio": "2026-10-05",
+        "fin": "2026-10-11"
+      },
+      {
+        "inicio": "2026-10-12",
+        "fin": "2026-10-18"
+      },
+      {
+        "inicio": "2026-10-19",
+        "fin": "2026-10-25"
+      },
+      {
+        "inicio": "2026-10-26",
+        "fin": "2026-11-01"
+      },
+      {
+        "inicio": "2026-11-02",
+        "fin": "2026-11-08"
+      },
+      {
+        "inicio": "2026-11-09",
+        "fin": "2026-11-15"
+      }
+    ],
+    "notas": [
+      {
+        "id": "M1",
+        "tipo": "M",
+        "texto": "Oferta y fotos",
+        "inicio": "2026-10-01",
+        "fin": "2026-10-04",
+        "evidencia": "1 texto de oferta definido y al menos 5 fotos utilizables de la caja",
+        "detalle": "Oferta base cerrada con fotos listas para usar en mensajes y publicación",
+        "criterio": "Texto de oferta definido y 5 fotos utilizables completados hasta 2026-10-04"
+      },
+      {
+        "id": "M2",
+        "tipo": "M",
+        "texto": "3 pagos confirmados",
+        "inicio": "2026-10-05",
+        "fin": "2026-10-11",
+        "evidencia": "3 pagos confirmados de compradores distintos",
+        "detalle": "Primer cierre comercial con pagos ya recibidos",
+        "criterio": "3 cajas vendidas y cobradas hasta 2026-10-11"
+      },
+      {
+        "id": "M3",
+        "tipo": "M",
+        "texto": "5 pagos despachados",
+        "inicio": "2026-10-12",
+        "fin": "2026-10-25",
+        "evidencia": "5 pagos confirmados acumulados y 5 envíos entregados al courier con guía",
+        "detalle": "Cinco ventas cobradas ya despachadas en dos lotes",
+        "criterio": "5 cajas cobradas y despachadas hasta 2026-10-25"
+      },
+      {
+        "id": "M4",
+        "tipo": "M",
+        "texto": "5 entregas confirmadas",
+        "inicio": "2026-10-14",
+        "fin": "2026-10-31",
+        "evidencia": "5 entregas confirmadas por compradores o courier",
+        "detalle": "Primeras cinco entregas completadas",
+        "criterio": "5 cajas entregadas hasta 2026-10-31"
+      },
+      {
+        "id": "M5",
+        "tipo": "M",
+        "texto": "8 pagos confirmados",
+        "inicio": "2026-10-26",
+        "fin": "2026-11-05",
+        "evidencia": "8 pagos confirmados acumulados",
+        "detalle": "Ocho ventas ya cobradas",
+        "criterio": "8 cajas vendidas y cobradas hasta 2026-11-05"
+      },
+      {
+        "id": "M6",
+        "tipo": "M",
+        "texto": "10 pagos despachados",
+        "inicio": "2026-11-02",
+        "fin": "2026-11-10",
+        "evidencia": "10 pagos confirmados acumulados y 10 guías emitidas",
+        "detalle": "Todas las ventas cobradas y despachadas dentro del límite acordado",
+        "criterio": "10 cajas cobradas y despachadas hasta 2026-11-10"
+      },
+      {
+        "id": "M7",
+        "tipo": "M",
+        "texto": "10 entregas confirmadas",
+        "inicio": "2026-11-05",
+        "fin": "2026-11-13",
+        "evidencia": "10 entregas confirmadas; si ocurre 1 daño, la reposición también queda entregada y confirmada hasta 2026-11-13",
+        "detalle": "Cierre operativo de todas las entregas con resolución de una reposición solo si llega a ocurrir",
+        "criterio": "10 cajas entregadas hasta 2026-11-13; si ocurre 1 daño, la reposición también queda entregada y confirmada hasta 2026-11-13"
+      },
+      {
+        "id": "H1",
+        "tipo": "H",
+        "texto": "Presentar oferta",
+        "inicio": "2026-10-01",
+        "fin": "2026-10-05",
+        "evidencia": "Mensaje final practicado y usado en el primer contacto de venta del 2026-10-05",
+        "detalle": "Aprender a presentar la oferta con texto breve, claro y respuesta a preguntas comunes"
+      },
+      {
+        "id": "O1",
+        "tipo": "O",
+        "texto": "Cuesta vender",
+        "inicio": "2026-10-01",
+        "fin": "2026-11-15",
+        "evidencia": "Riesgo vigilado en contactos, publicidad y revisiones semanales",
+        "detalle": "Puede frenar cobros y dejar pagos por debajo del ritmo previsto",
+        "principal": true
+      },
+      {
+        "id": "O2",
+        "tipo": "O",
+        "texto": "Entrega al final",
+        "inicio": "2026-10-01",
+        "fin": "2026-11-15",
+        "evidencia": "Riesgo vigilado en lotes y fechas límite de despacho",
+        "detalle": "Puede atrasar despachos y dejar sin margen para una reposición",
+        "principal": false
+      },
+      {
+        "id": "A1",
+        "tipo": "A",
+        "texto": "Hermana fotos",
+        "inicio": "2026-10-03",
+        "fin": "2026-10-03",
+        "evidencia": "Apoyo usado para tomar y elegir fotos",
+        "detalle": "Ayuda puntual para producir fotos de venta"
+      },
+      {
+        "id": "A2",
+        "tipo": "A",
+        "texto": "Courier envíos",
+        "inicio": "2026-10-06",
+        "fin": "2026-11-13",
+        "evidencia": "Formato de despacho coordinado y lotes recogidos o recibidos",
+        "detalle": "Recoge de lunes a sábado, entrega normal en 2 días hábiles de lunes a viernes y una reposición llega al siguiente día hábil si ocurre"
+      },
+      {
+        "id": "T1",
+        "tipo": "T",
+        "texto": "Oferta y control",
+        "inicio": "2026-10-01",
+        "fin": "2026-10-01",
+        "evidencia": "Texto base de venta y hoja de control de interesados, pagos y entregas",
+        "detalle": "Definir oferta, precio, medio de pago y hoja de control; 30 min",
+        "frecuencia": "una vez"
+      },
+      {
+        "id": "T2",
+        "tipo": "T",
+        "texto": "Tomar elegir fotos",
+        "inicio": "2026-10-03",
+        "fin": "2026-10-03",
+        "evidencia": "Fotos tomadas y 5 fotos seleccionadas",
+        "detalle": "Tomar fotos con A1 y elegir las usables; 40 min fotos + 20 min selección",
+        "frecuencia": "una vez"
+      },
+      {
+        "id": "T3",
+        "tipo": "T",
+        "texto": "Practicar mensaje final",
+        "inicio": "2026-10-04",
+        "fin": "2026-10-04",
+        "evidencia": "Mensaje final practicado y ajustado",
+        "detalle": "Practicar presentación y cerrar mensaje final; 20 min práctica + 10 min ajuste",
+        "frecuencia": "una vez"
+      },
+      {
+        "id": "T4",
+        "tipo": "T",
+        "texto": "Contactar cobrar registrar",
+        "inicio": "2026-10-05",
+        "fin": "2026-11-07",
+        "evidencia": "Registro actualizado de contactos, respuestas y pagos confirmados",
+        "detalle": "Contactar interesados, responder, cobrar y registrar pagos; 15 min contacto o seguimiento + 5 min registro por sesión",
+        "frecuencia": "2026-10-05, 2026-10-07, 2026-10-09, 2026-10-11, 2026-10-14, 2026-10-16, 2026-10-18, 2026-10-19, 2026-10-21, 2026-10-23, 2026-10-25, 2026-10-26, 2026-10-28, 2026-10-30, 2026-11-01, 2026-11-02, 2026-11-04, 2026-11-06"
+      },
+      {
+        "id": "T5",
+        "tipo": "T",
+        "texto": "Empaques y courier",
+        "inicio": "2026-10-06",
+        "fin": "2026-10-06",
+        "evidencia": "Empaques previstos y formato de despacho acordado con courier",
+        "detalle": "Asegurar empaques y acordar formato de despacho con courier; 20 min empaques + 10 min coordinación",
+        "frecuencia": "una vez"
+      },
+      {
+        "id": "T6",
+        "tipo": "T",
+        "texto": "Publicar y revisar",
+        "inicio": "2026-10-20",
+        "fin": "2026-10-27",
+        "evidencia": "Publicación hecha y revisión de respuestas registrada",
+        "detalle": "Publicidad de apoyo con tope total de S/40; 2026-10-20 crear y publicar 20 min + comprobar 10 min; 2026-10-27 revisar respuestas y ajustar 20 min",
+        "frecuencia": "2026-10-20, 2026-10-27"
+      },
+      {
+        "id": "T7",
+        "tipo": "T",
+        "texto": "Despachar lotes courier",
+        "inicio": "2026-10-12",
+        "fin": "2026-11-07",
+        "evidencia": "Lotes entregados al courier con guías emitidas",
+        "detalle": "Preparar y entregar lotes al courier; 2026-10-12 3 cajas 30 min, 2026-10-24 2 cajas 20 min, 2026-11-03 3 cajas 30 min, 2026-11-07 2 cajas 20 min",
+        "frecuencia": "2026-10-12, 2026-10-24, 2026-11-03, 2026-11-07"
+      },
+      {
+        "id": "T8",
+        "tipo": "T",
+        "texto": "Confirmar entregas incidencias",
+        "inicio": "2026-10-14",
+        "fin": "2026-11-10",
+        "evidencia": "Entregas confirmadas y registro de incidencias actualizado",
+        "detalle": "Confirmar entregas y revisar incidencias por lote en fechas de entrega previstas; 2026-10-14 10 min, 2026-10-27 10 min, 2026-11-05 10 min, 2026-11-10 15 min",
+        "frecuencia": "2026-10-14, 2026-10-27, 2026-11-05, 2026-11-10"
+      },
+      {
+        "id": "T9",
+        "tipo": "T",
+        "texto": "Revisar avance lotes",
+        "inicio": "2026-10-11",
+        "fin": "2026-11-01",
+        "evidencia": "Revisión semanal registrada con prioridad del siguiente lote",
+        "detalle": "Revisar avance y fijar prioridad del siguiente lote; 10 min por sesión",
+        "frecuencia": "2026-10-11, 2026-10-18, 2026-10-25, 2026-11-01"
+      },
+      {
+        "id": "T10",
+        "tipo": "T",
+        "texto": "Reposición si daño",
+        "inicio": "2026-11-10",
+        "fin": "2026-11-13",
+        "evidencia": "Si ocurre 1 daño, pedido hecho, reposición reenviada y entrega final confirmada dentro del límite",
+        "detalle": "Contingencia para 1 caja dañada; ruta límite reservada: 2026-11-10 pedir 10 min, 2026-11-11 recibir, reempacar y reenviar 20 min, 2026-11-13 confirmar 10 min. Si el daño se confirma antes, se aplica el mismo procedimiento antes de estas fechas límite",
+        "frecuencia": "si ocurre 1 daño: 2026-11-10, 2026-11-11, 2026-11-13"
+      },
+      {
+        "id": "T11",
+        "tipo": "T",
+        "texto": "Cerrar ganancia final",
+        "inicio": "2026-11-15",
+        "fin": "2026-11-15",
+        "evidencia": "Cálculo final de ganancia neta y cierre de entregas",
+        "detalle": "Cierre final de entregas y ganancia; incluir reposición solo si ocurrió; 20 min",
+        "frecuencia": "una vez"
+      },
+      {
+        "id": "MP",
+        "tipo": "MP",
+        "texto": "10 cajas utilidad",
+        "inicio": "2026-10-01",
+        "fin": "2026-11-15",
+        "evidencia": "10 ventas cerradas, 10 pagos recibidos, 10 entregas confirmadas y ganancia neta de al menos S/450",
+        "detalle": "Vender, cobrar y entregar 10 cajas de regalo con ganancia neta mínima de S/450",
+        "criterio": "10 cajas vendidas, cobradas y entregadas; ganancia neta mínima de S/450 hasta 2026-11-15"
+      }
+    ],
+    "sesiones": [
+      {
+        "id": "T1",
+        "fecha": "2026-10-01",
+        "minutos": 30
+      },
+      {
+        "id": "T2",
+        "fecha": "2026-10-03",
+        "minutos": 60
+      },
+      {
+        "id": "T3",
+        "fecha": "2026-10-04",
+        "minutos": 30
+      },
+      {
+        "id": "T4",
+        "fecha": "2026-10-05",
+        "minutos": 20
+      },
+      {
+        "id": "T5",
+        "fecha": "2026-10-06",
+        "minutos": 30
+      },
+      {
+        "id": "T4",
+        "fecha": "2026-10-07",
+        "minutos": 20
+      },
+      {
+        "id": "T4",
+        "fecha": "2026-10-09",
+        "minutos": 20
+      },
+      {
+        "id": "T4",
+        "fecha": "2026-10-11",
+        "minutos": 20
+      },
+      {
+        "id": "T9",
+        "fecha": "2026-10-11",
+        "minutos": 10
+      },
+      {
+        "id": "T7",
+        "fecha": "2026-10-12",
+        "minutos": 30
+      },
+      {
+        "id": "T4",
+        "fecha": "2026-10-14",
+        "minutos": 20
+      },
+      {
+        "id": "T8",
+        "fecha": "2026-10-14",
+        "minutos": 10
+      },
+      {
+        "id": "T4",
+        "fecha": "2026-10-16",
+        "minutos": 20
+      },
+      {
+        "id": "T4",
+        "fecha": "2026-10-18",
+        "minutos": 20
+      },
+      {
+        "id": "T9",
+        "fecha": "2026-10-18",
+        "minutos": 10
+      },
+      {
+        "id": "T4",
+        "fecha": "2026-10-19",
+        "minutos": 20
+      },
+      {
+        "id": "T6",
+        "fecha": "2026-10-20",
+        "minutos": 30
+      },
+      {
+        "id": "T4",
+        "fecha": "2026-10-21",
+        "minutos": 20
+      },
+      {
+        "id": "T4",
+        "fecha": "2026-10-23",
+        "minutos": 20
+      },
+      {
+        "id": "T7",
+        "fecha": "2026-10-24",
+        "minutos": 20
+      },
+      {
+        "id": "T4",
+        "fecha": "2026-10-25",
+        "minutos": 20
+      },
+      {
+        "id": "T9",
+        "fecha": "2026-10-25",
+        "minutos": 10
+      },
+      {
+        "id": "T4",
+        "fecha": "2026-10-26",
+        "minutos": 20
+      },
+      {
+        "id": "T6",
+        "fecha": "2026-10-27",
+        "minutos": 20
+      },
+      {
+        "id": "T8",
+        "fecha": "2026-10-27",
+        "minutos": 10
+      },
+      {
+        "id": "T4",
+        "fecha": "2026-10-28",
+        "minutos": 20
+      },
+      {
+        "id": "T4",
+        "fecha": "2026-10-30",
+        "minutos": 20
+      },
+      {
+        "id": "T4",
+        "fecha": "2026-11-01",
+        "minutos": 20
+      },
+      {
+        "id": "T9",
+        "fecha": "2026-11-01",
+        "minutos": 10
+      },
+      {
+        "id": "T4",
+        "fecha": "2026-11-02",
+        "minutos": 20
+      },
+      {
+        "id": "T7",
+        "fecha": "2026-11-03",
+        "minutos": 30
+      },
+      {
+        "id": "T4",
+        "fecha": "2026-11-04",
+        "minutos": 20
+      },
+      {
+        "id": "T8",
+        "fecha": "2026-11-05",
+        "minutos": 10
+      },
+      {
+        "id": "T4",
+        "fecha": "2026-11-06",
+        "minutos": 20
+      },
+      {
+        "id": "T7",
+        "fecha": "2026-11-07",
+        "minutos": 20
+      },
+      {
+        "id": "T8",
+        "fecha": "2026-11-10",
+        "minutos": 15
+      },
+      {
+        "id": "T10",
+        "fecha": "2026-11-10",
+        "minutos": 10
+      },
+      {
+        "id": "T10",
+        "fecha": "2026-11-11",
+        "minutos": 20
+      },
+      {
+        "id": "T10",
+        "fecha": "2026-11-13",
+        "minutos": 10
+      },
+      {
+        "id": "T11",
+        "fecha": "2026-11-15",
+        "minutos": 20
+      }
+    ],
+    "capacidad": {
+      "2026-10-01": 30,
+      "2026-10-03": 60,
+      "2026-10-04": 30,
+      "2026-10-05": 30,
+      "2026-10-06": 30,
+      "2026-10-07": 30,
+      "2026-10-09": 30,
+      "2026-10-11": 30,
+      "2026-10-12": 30,
+      "2026-10-14": 30,
+      "2026-10-16": 30,
+      "2026-10-18": 60,
+      "2026-10-19": 30,
+      "2026-10-20": 30,
+      "2026-10-21": 30,
+      "2026-10-23": 30,
+      "2026-10-24": 60,
+      "2026-10-25": 30,
+      "2026-10-26": 30,
+      "2026-10-27": 30,
+      "2026-10-28": 30,
+      "2026-10-30": 30,
+      "2026-11-01": 30,
+      "2026-11-02": 30,
+      "2026-11-03": 30,
+      "2026-11-04": 30,
+      "2026-11-05": 30,
+      "2026-11-06": 30,
+      "2026-11-07": 60,
+      "2026-11-10": 30,
+      "2026-11-11": 30,
+      "2026-11-13": 30,
+      "2026-11-15": 30
+    },
+    "limite_semanal": 240,
+    "dependencias": [
+      [
+        "T1",
+        "T2"
+      ],
+      [
+        "T1",
+        "T3"
+      ],
+      [
+        "T1",
+        "T4"
+      ],
+      [
+        "T1",
+        "T5"
+      ],
+      [
+        "T1",
+        "T8"
+      ],
+      [
+        "T1",
+        "T9"
+      ],
+      [
+        "T1",
+        "T10"
+      ],
+      [
+        "T1",
+        "T11"
+      ],
+      [
+        "T2",
+        "T3"
+      ],
+      [
+        "T2",
+        "T6"
+      ],
+      [
+        "T3",
+        "T4"
+      ],
+      [
+        "T3",
+        "T6"
+      ],
+      [
+        "T5",
+        "T7"
+      ],
+      [
+        "T5",
+        "T10"
+      ],
+      [
+        "T8",
+        "T11"
+      ],
+      [
+        "T10",
+        "T11"
+      ]
+    ],
+    "dependencias_sesion": [
+      [
+        "T4",
+        "T9"
+      ]
+    ],
+    "dependencias_evento": [
+      [
+        "T4",
+        "2026-10-11",
+        "T7",
+        "2026-10-12"
+      ],
+      [
+        "T4",
+        "2026-10-23",
+        "T7",
+        "2026-10-24"
+      ],
+      [
+        "T4",
+        "2026-11-02",
+        "T7",
+        "2026-11-03"
+      ],
+      [
+        "T4",
+        "2026-11-06",
+        "T7",
+        "2026-11-07"
+      ],
+      [
+        "T7",
+        "2026-10-12",
+        "T8",
+        "2026-10-14"
+      ],
+      [
+        "T7",
+        "2026-10-24",
+        "T8",
+        "2026-10-27"
+      ],
+      [
+        "T7",
+        "2026-11-03",
+        "T8",
+        "2026-11-05"
+      ],
+      [
+        "T7",
+        "2026-11-07",
+        "T8",
+        "2026-11-10"
+      ],
+      [
+        "T8",
+        "2026-11-10",
+        "T10",
+        "2026-11-10"
+      ],
+      [
+        "T10",
+        "2026-11-10",
+        "T10",
+        "2026-11-11"
+      ],
+      [
+        "T10",
+        "2026-11-11",
+        "T10",
+        "2026-11-13"
+      ]
+    ],
+    "conexiones": [
+      [
+        "A1",
+        "T2",
+        "apoyo"
+      ],
+      [
+        "A2",
+        "T5",
+        "apoyo"
+      ],
+      [
+        "A2",
+        "T7",
+        "apoyo"
+      ],
+      [
+        "A2",
+        "T8",
+        "apoyo"
+      ],
+      [
+        "A2",
+        "T10",
+        "apoyo"
+      ],
+      [
+        "H1",
+        "T3",
+        "contribucion"
+      ],
+      [
+        "H1",
+        "T4",
+        "contribucion"
+      ],
+      [
+        "O1",
+        "T4",
+        "riesgo"
+      ],
+      [
+        "O1",
+        "T6",
+        "riesgo"
+      ],
+      [
+        "O2",
+        "T7",
+        "riesgo"
+      ],
+      [
+        "O2",
+        "T8",
+        "riesgo"
+      ],
+      [
+        "T1",
+        "M1",
+        "contribucion"
+      ],
+      [
+        "T2",
+        "M1",
+        "contribucion"
+      ],
+      [
+        "T3",
+        "M1",
+        "contribucion"
+      ],
+      [
+        "T4",
+        "M2",
+        "contribucion"
+      ],
+      [
+        "T4",
+        "M3",
+        "contribucion"
+      ],
+      [
+        "T7",
+        "M3",
+        "contribucion"
+      ],
+      [
+        "T8",
+        "M4",
+        "contribucion"
+      ],
+      [
+        "T4",
+        "M5",
+        "contribucion"
+      ],
+      [
+        "T6",
+        "M5",
+        "contribucion"
+      ],
+      [
+        "T4",
+        "M6",
+        "contribucion"
+      ],
+      [
+        "T7",
+        "M6",
+        "contribucion"
+      ],
+      [
+        "T8",
+        "M7",
+        "contribucion"
+      ],
+      [
+        "T10",
+        "M7",
+        "contribucion"
+      ],
+      [
+        "T9",
+        "T7",
+        "contribucion"
+      ],
+      [
+        "M6",
+        "MP",
+        "contribucion"
+      ],
+      [
+        "M7",
+        "MP",
+        "contribucion"
+      ],
+      [
+        "T11",
+        "MP",
+        "contribucion"
+      ]
+    ],
+    "finanzas": true,
+    "caja": [
+      {
+        "fecha": "2026-10-01",
+        "saldo": 200,
+        "reserva": 55,
+        "libre": 145
+      },
+      {
+        "fecha": "2026-10-11",
+        "saldo": 500,
+        "reserva": 55,
+        "libre": 445
+      },
+      {
+        "fecha": "2026-10-12",
+        "saldo": 485,
+        "reserva": 55,
+        "libre": 430
+      },
+      {
+        "fecha": "2026-10-20",
+        "saldo": 445,
+        "reserva": 55,
+        "libre": 390
+      },
+      {
+        "fecha": "2026-10-23",
+        "saldo": 645,
+        "reserva": 55,
+        "libre": 590
+      },
+      {
+        "fecha": "2026-10-24",
+        "saldo": 635,
+        "reserva": 55,
+        "libre": 580
+      },
+      {
+        "fecha": "2026-11-02",
+        "saldo": 935,
+        "reserva": 55,
+        "libre": 880
+      },
+      {
+        "fecha": "2026-11-03",
+        "saldo": 920,
+        "reserva": 55,
+        "libre": 865
+      },
+      {
+        "fecha": "2026-11-06",
+        "saldo": 1120,
+        "reserva": 55,
+        "libre": 1065
+      },
+      {
+        "fecha": "2026-11-07",
+        "saldo": 1110,
+        "reserva": 55,
+        "libre": 1055
+      },
+      {
+        "fecha": "2026-11-13",
+        "saldo": 1110,
+        "reserva": 55,
+        "libre": 1055
+      },
+      {
+        "fecha": "2026-11-15",
+        "saldo": 1110,
+        "reserva": 0,
+        "libre": 1110
+      }
+    ],
+    "materiales": {
+      "papel": [
+        90,
+        60
+      ],
+      "nota": [
+        3.8,
+        3.8
+      ],
+      "meta": [
+        15,
+        15
+      ],
+      "pared": 300
+    },
+    "consolidaciones": [
+      "T4, T6, T7, T8 y T9 reúnen sesiones múltiples del mismo procedimiento y recurso en una sola nota cada uno.",
+      "T10 conserva una sola nota de contingencia para una única reposición posible; se reserva la ruta límite 2026-11-10, 2026-11-11 y 2026-11-13 sin duplicar rutas mutuamente excluyentes en sesiones.",
+      "La publicidad máxima usada en el plan es S/40; con ello la utilidad prevista es S/510 sin reposición y S/455 con 1 reposición."
+    ],
+    "contexto": "Meta de empresa. Tiene 10 cajas ya disponibles, S/200 libres, 25 interesados, ninguna venta cobrada al inicio y sin fotos. Precio S/100 por caja. Costo histórico para utilidad S/40 por caja. Empaque S/5 por caja. Publicidad máxima acordada S/40. El comprador paga el primer envío. El courier recoge de lunes a sábado, entrega normal en 2 días hábiles de lunes a viernes y una reposición llega al siguiente día hábil si ocurre. Utilidad calculada S/510 sin reposición y S/455 con 1 reposición.",
+    "pendientes": []
+  },
+  "facts": {
+    "meta": "Vender, cobrar y entregar 10 cajas de regalo con ganancia neta de al menos 450",
+    "criterio": "10 cajas vendidas, cobradas y entregadas; ganancia neta mínima de 450",
+    "inicio": "2026-10-01",
+    "fin": "2026-11-15",
+    "situacion": "Tiene 10 cajas disponibles, 200 libres, 25 personas interesadas, ninguna ha pagado y no tiene fotos",
+    "obstaculos": "Deja las entregas para el último día",
+    "principal": "vender",
+    "habilidades": "Aprender a presentar la oferta",
+    "apoyos": "El courier puede ayudar con los envíos",
+    "disponibilidad": "30 minutos diarios y 60 los sábados",
+    "papeles": "3",
+    "papel": "[90,60]",
+    "nota": "[3.8,3.8]",
+    "meta_nota": "[15,15]",
+    "pared": "300",
+    "tipo": "empresa",
+    "saldo": "200",
+    "objetivo": "450",
+    "unidades": "10",
+    "precio": "100",
+    "costo": "40",
+    "empaque": "5",
+    "publicidad": "40",
+    "reposicion_caja": "40",
+    "reposicion_empaque": "5",
+    "reposicion_envio": "10",
+    "entrega_habiles": "2",
+    "entrega_lun_vie": "true",
+    "recogida_sabados": "true",
+    "reposicion_habiles": "1",
+    "mini_aprobadas": "true",
+    "tareas_aprobadas": "true",
+    "minutos_semana": "[30,30,30,30,30,60,30]"
+  }
+}

@@ -186,6 +186,7 @@ def review(client,model,messages,candidate,math_facts,phase,usage):
       'Papeles disponibles no significa papeles obligatorios: se pueden usar menos. papel son dimensiones, nota es post-it pequeño y meta es el grande. '
       'Las contingencias contienen rutas MUTUAMENTE EXCLUYENTES: se ejecuta como máximo una, solo si ocurre la condición. Reservar minutos no vuelve obligatorio el daño. No sumar las cuatro rutas como trabajo real. '
       'La aplicación adapta la misma reposición de 40 minutos a cada entrega posible, usando horarios confirmados y calendario del proveedor. Son alternativas del mismo procedimiento aprobado, no tareas añadidas. '
+      'Una dependencia cuyo origen tiene condicional:true es requisito solo si se activa; la aplicación la rotula requisito (si aplica). No interpretarla como trabajo obligatorio. '
       'Si el capital disponible cubre todos los costos pendientes, economia calculada demuestra liquidez y utilidad; no exigir una caja por fechas de un daño que no se sabe si ocurrirá. '
       'Reservar 55 de 200 inicialmente disponibles deja 145 libres: esa decisión del plan no contradice el disponible inicial. No confundir disponible previo con libre posterior a reserva. '
       'No exigir post-it para cada conocimiento previo (sumar o filtrar); son situación actual. '
@@ -219,6 +220,8 @@ detalle (breve), frecuencia (en T recurrentes), criterio (en M/MP) si son conoci
 Las notas pequeñas llevan ID y 2–4 palabras; texto completo y evidencia en detalle/criterio.
 Marca principal:true en UN obstáculo O que coincida con el principal declarado.
 Conserva las fechas límite de M ya aceptadas aunque sus tareas puedan terminar antes.
+Conserva las evidencias aprobadas de habilidades: presentar una oferta no exige
+una prueba «sin leer» u otra condición adicional que el alumno no haya aceptado.
 Para reposición opcional, una sola T con workflow:"reposicion", activador:ID de la tarea
 que confirma las entregas y detecta daños. La aplicación programará rutas alternativas
 de 10 min pedido + 5 min revisión + 15 min reempaque/reenvío + 10 min comprobación,
@@ -263,6 +266,10 @@ def build_final(client: OpenAI, model: str, messages: list[dict[str, str]],
                 return None, [str(x) for x in plan["pendientes"]], usage
             plan['contexto']={'situacion_actual':snapshot['facts'].get('situacion',''),
                               'obstaculo_principal':snapshot['facts'].get('principal','')}
+            currencies=set(re.findall(r'S/|US\$|\$|€|£|\b(?:PEN|USD|EUR|GBP)\b', '\n'.join(m['content'] for m in messages if m['role']=='user')))
+            canonical={'PEN':'S/','USD':'US$','EUR':'€','GBP':'£'}
+            currencies={canonical.get(unit,unit) for unit in currencies}
+            if len(currencies)==1:plan['moneda']=currencies.pop()
             plan['materiales']['papelografos_disponibles']=int(snapshot['facts']['papeles'])
             cash=cash_schedule(snapshot['facts'])
             if cash is not None:

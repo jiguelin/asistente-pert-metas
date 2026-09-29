@@ -71,11 +71,12 @@ def export_pdf(audit: dict) -> bytes:
     mp = next(n for n in audit["notas"] if n["tipo"] == "MP")
     out.extend([_p("Meta Principal", heading),
                 _p(mp.get("criterio") or mp.get("detalle") or mp["texto"], body),
+                *([_p("Moneda de los importes: "+plan['moneda'],body)] if plan.get('moneda') else []),
                 _p(f"Inicio: {plan['inicio']}  |  Límite: {plan['fin']}  |  "
                    f"Duración inclusiva: {motor['dias_inclusivos']} días", body),
                 _p(f"{audit['notas_pequenas']} notas pequeñas y una Meta Principal grande; "
                    f"{motor['papelografos']} papelógrafos; "
-                   f"{motor['minutos_totales']} minutos de trabajo programado.", body)])
+                   f"{motor['minutos_totales']:g} minutos de trabajo programado.", body)])
     context=plan.get('contexto',{})
     if context.get('situacion_actual'):
         out.extend([_p('Situación actual',heading),_p(context['situacion_actual'],body)])

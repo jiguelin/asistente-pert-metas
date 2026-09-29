@@ -47,8 +47,11 @@ ambigüedad ESENCIAL que cambia la verificación. «Caminar 5 km con buena energ
 ya es verificable; energía no exige otra métrica. «Reporte profesional» solo, no lo es.
 ambiguedad_esencial: solo el término o frase LITERAL del usuario que impide verificar,
 sin explicación. Revisar también la última aclaración: «bien presentado» u «ordenado»
-sin característica observable no resuelven «profesional». No acreditar definiciones
-vagas sugeridas por el asistente. No confundir preferencias de estilo con criterios esenciales.
+sin característica observable no resuelven «profesional».
+Si la última aclaración introduce nuevas palabras vagas, señala una de ellas como
+ambiguedad_esencial (por ejemplo «bien presentado»), en vez de repetir el término original.
+No acreditar definiciones vagas sugeridas por el asistente. No confundir preferencias
+de estilo con criterios esenciales.
 criterio: conserva los requisitos reales sin añadir otros. habilidades son las necesarias
 para superar el obstáculo, no convertir situación actual en una habilidad futura.
 «Ningún obstáculo» / «ningún apoyo» son hechos válidos. No inferir principal de una lista.

@@ -133,7 +133,7 @@ def compile_replacement(plan,f):
     task.update(condicional=True,workflow='reposicion',activador=trigger,
                 inicio=min(r['pedido'] for r in routes),fin=max(r['confirmacion'] for r in routes),
                 detalle='Solo si una caja llega dañada: 10 min pedir; 5 min revisar el reemplazo; 15 min reempacar con empaque nuevo y reenviar; 10 min confirmar entrega. Usa una sola ruta de la leyenda.',
-                evidencia='Entrega del reemplazo comprobada si hubo daño; registro de entregas sin daños si no se activó.',
+                evidencia='Entrega del reemplazo comprobada si hubo daño. Si no se activa, esta tarea no produce un resultado ni registra entregas normales.',
                 frecuencia='Como máximo una reposición; no se ejecuta si no hay daño.')
     plan['contingencias']=[{'id':ident,'condicion':'Si una caja llega dañada','max_activaciones':1,'rutas':routes,
                            'calendario':{'reposicion_habiles':int(Decimal(f['reposicion_habiles'])),

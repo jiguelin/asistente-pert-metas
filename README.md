@@ -1,6 +1,8 @@
 # Asistente PERT Chart de Metas — app para el taller
 
-**Estado:** revisión final en curso. Salud, finanzas y aprendizaje completaron su PDF con API real; el cierre empresarial se está validando tras corregir contingencias. Las 37 pruebas locales pasan. No compartir masivamente con alumnos todavía.
+**Estado:** validación funcional aprobada en los cuatro casos (salud, finanzas, empresa y aprendizaje), con PDF completo y revisado. Las 37 pruebas locales pasan, también desde una copia independiente; 30 primeras solicitudes simultáneas a IA real respondieron correctamente. Disponible para uso individual y piloto del taller. No se han probado micrófonos/permisos en teléfonos reales ni30 cierres complejos simultáneos.
+
+Las cuatro entrevistas iniciales fueron nuevas; las regresiones finales reutilizaron sus avances aprobados. El cierre empresarial necesitó tres borradores internos y unos10 minutos. El alumno ve únicamente el resultado que pasa los controles; el indicador muestra tiempo de espera.
 
 ## Qué hace
 
@@ -27,9 +29,9 @@ python -m streamlit run app.py
 2. En Streamlit Community Cloud crea una app desde el repositorio con entrada `app.py`.
 3. En **Advanced settings → Secrets** copia los valores reales siguiendo `secrets.toml.example`. La contraseña `metas` es fácil de adivinar y compartir: rota la contraseña después del taller. La app verifica la contraseña vigente también para sesiones ya abiertas.
 4. Consulta el consumo real en OpenAI Platform durante el piloto y el evento. No hay presupuesto máximo ni límite de turnos configurado en esta app; los US$20 mencionados eran solo una pregunta sobre costos. Si se agota el saldo de API, recarga y permite que el alumno reintente su mensaje.
-5. Prueba una conversación completa con API real; comprueba el consumo de tokens y audio en Usage; luego haz cuatro casos completos y una prueba simultánea de 30 navegadores.
+5. La QA completó los cuatro casos y30 primeras respuestas simultáneas con API real. Esto no equivale a30 montajes finales simultáneos ni100 alumnos. Consulta consumo y límites de la cuenta en OpenAI Platform durante el evento.
 6. Prueba en iPhone y Android la grabación, permisos, PDF, importación y envío del archivo desde las opciones de compartir del teléfono. El botón de descarga es el mecanismo garantizado por la app; compartir un PDF como archivo desde un iframe de Streamlit no está implementado ni certificado.
-7. Solo entonces comparte la URL y contraseña a los alumnos.
+7. Comparte la URL y contraseña para un piloto del taller. Guarda el avance durante el trabajo; si la API falla, la aplicación permite reintentar sin perder el mensaje.
 
 ## Controles de calidad y límites conocidos
 

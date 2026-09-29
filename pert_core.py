@@ -223,10 +223,10 @@ def audit_plan(plan: dict[str, Any]) -> dict[str, Any]:
 def summary(audit: dict[str, Any]) -> str:
     r = audit["motor"]
     dens = "; ".join(
-        f"P{d['papel']} C{d['columna']}: {sum(d['conteo'].values())} notas, "
-        f"{d['capacidad_fila'] - d['maximo_usado']} plazas libres en la fila más ocupada"
+        f"P{d['papel']} C{d['columna']}: notas {sum(d['conteo'].values())}; "
+        f"plazas libres {d['capacidad_fila'] - d['maximo_usado']} en la fila más ocupada"
         for d in r["densidad"]
     )
-    return (f"{r['dias_inclusivos']} días inclusivos; {r['minutos_totales']} minutos "
+    return (f"{r['dias_inclusivos']} días inclusivos; {r['minutos_totales']:g} minutos "
             f"de tareas programadas; {r['papelografos']} papelógrafos; "
             f"{audit['notas_pequenas']} notas pequeñas + 1 MP. {dens}")
