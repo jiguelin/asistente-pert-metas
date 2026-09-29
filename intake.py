@@ -5,7 +5,7 @@ import unicodedata
 from datetime import date, timedelta
 from decimal import Decimal
 
-KEYS = '''meta criterio inicio fin situacion obstaculos principal habilidades apoyos disponibilidad papel nota meta_nota pared papeles tipo saldo ingreso gasto cobro_fin_mes gastos_inicio_pagados reserva objetivo unidades precio costo empaque publicidad reposicion reposicion_caja reposicion_empaque reposicion_envio entrega_habiles entrega_lun_vie recogida_sabados reposicion_habiles mini_aprobadas tareas_aprobadas'''.split()
+KEYS = '''meta criterio inicio fin situacion obstaculos principal habilidades apoyos disponibilidad minutos_semana minutos_cobro excepciones_tiempo papel nota meta_nota pared papeles tipo saldo capital ingreso gasto cobro_fin_mes gastos_inicio_pagados reserva objetivo unidades precio costo empaque publicidad inventario_disponible otros_costos primer_envio_cliente reposicion reposicion_caja reposicion_empaque reposicion_envio entrega_habiles entrega_lun_vie recogida_sabados reposicion_habiles mini_aprobadas tareas_aprobadas'''.split()
 SCHEMA = {"type":"object","properties":{
     "ambiguedad_esencial":{"type":["string","null"]},
     "meta_verificable":{"type":"boolean"},
@@ -26,9 +26,18 @@ Fechas inicio/fin: ISO con año. Importes: número sin moneda ni separadores de 
 papel/nota/meta_nota: JSON [ancho,alto] en cm. pared/papeles: número.
 tipo: ahorro si la meta exige dinero libre; empresa si exige ganancia comercial; otro si no.
 cobro_fin_mes/gastos_inicio_pagados: true o false. No asumas false cuando no se sabe.
-saldo=dinero inicial libre; ingreso/gasto=mensuales; reserva=dinero final intocable;
+saldo=dinero inicial libre en ahorro; capital=dinero disponible inicial de una empresa
+(no llamarlo libre si no está separado de obligaciones). ingreso/gasto=mensuales; reserva=dinero final intocable;
+minutos_semana: JSON [lunes,martes,miércoles,jueves,viernes,sábado,domingo] de MINUTOS
+confirmados; días no disponibles=0. Solo si los días están declarados; no inventar reparto
+de un total semanal. minutos_cobro: minutos disponibles el día del cobro si explícitos.
+excepciones_tiempo: objeto JSON fecha ISO:minutos, solo excepciones declaradas;
+0 si no puede trabajar ese día. No inventar excepciones ni omitirlas si fueron aportadas.
 objetivo=umbral libre; empresa: unidades,precio,costo unitario,empaque unitario,
 publicidad total y costos de reposicion_caja/empaque/envio o reposicion total si explícito.
+inventario_disponible=true solo si ya posee las unidades; otros_costos=0 solo si
+declara que no hay otros costos/comisiones; primer_envio_cliente=true solo si
+el cliente paga el primer envío. No asumir estas condiciones por silencio.
 Si están declarados: entrega_habiles y reposicion_habiles son números de días;
 entrega_lun_vie=true solo con entregas de lunes a viernes; recogida_sabados=true
 solo si recoge sábados. False solo si se excluyen explícitamente; no inventar horarios.
@@ -36,6 +45,10 @@ Un gasto ya pagado en el mes inicial NO se vuelve a restar. Una reserva no elimi
 Meta verificable: hay resultado observable, cantidad o evidencia suficiente. Aclara solo
 ambigüedad ESENCIAL que cambia la verificación. «Caminar 5 km con buena energía»
 ya es verificable; energía no exige otra métrica. «Reporte profesional» solo, no lo es.
+ambiguedad_esencial: solo el término o frase LITERAL del usuario que impide verificar,
+sin explicación. Revisar también la última aclaración: «bien presentado» u «ordenado»
+sin característica observable no resuelven «profesional». No acreditar definiciones
+vagas sugeridas por el asistente. No confundir preferencias de estilo con criterios esenciales.
 criterio: conserva los requisitos reales sin añadir otros. habilidades son las necesarias
 para superar el obstáculo, no convertir situación actual en una habilidad futura.
 «Ningún obstáculo» / «ningún apoyo» son hechos válidos. No inferir principal de una lista.

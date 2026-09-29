@@ -81,12 +81,13 @@ def verificar(p):
     for s in p['sesiones']:
         n = byid.get(s['id'])
         if not n or n['tipo'] != 'T': errors.append('Sesión sin tarea '+s['id']); continue
+        if n.get('condicional'): errors.append('Tarea condicional en calendario obligatorio '+s['id'])
         d = _d(s['fecha']); minutes = s['minutos']
         if minutes <= 0: errors.append('Esfuerzo no positivo '+s['id'])
         if not _d(n['inicio']) <= d <= _d(n['fin']): errors.append('Sesión fuera de rango '+s['id'])
         daily[s['fecha']] += minutes; weekly[d.isocalendar()[:2]] += minutes; totals[s['id']] += minutes
     for n in notes:
-        if n['tipo'] == 'T' and totals[n['id']] <= 0: errors.append('Tarea sin carga programada '+n['id'])
+        if n['tipo'] == 'T' and not n.get('condicional') and totals[n['id']] <= 0: errors.append('Tarea sin carga programada '+n['id'])
     for d, m in daily.items():
         cap = p['capacidad'].get(d)
         if cap is None or m > cap: errors.append(f'Carga diaria {d}: {m} min; disponible {cap}')

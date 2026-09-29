@@ -1,10 +1,10 @@
 # Asistente PERT Chart de Metas — app para el taller
 
-**Estado:** revisión de calidad en curso. Las cuatro conversaciones de la primera versión detectaron errores de calendario, flujo financiero y finalización. Esta revisión corrige el flujo y tiene 17 pruebas locales aprobadas; la revisión financiera ya completó el PDF con API real; falta aprobar las cuatro conversaciones completas con la revisión final y comprobar audio en teléfonos. No compartir con alumnos todavía.
+**Estado:** revisión final en curso. Salud, finanzas y aprendizaje completaron su PDF con API real; el cierre empresarial se está validando tras corregir contingencias. Las 37 pruebas locales pasan. No compartir masivamente con alumnos todavía.
 
 ## Qué hace
 
-- Chat con una sola pregunta por turno, basado en INSTRUCTIONS_APP.txt y la guía operativa v7, con registro de hechos acreditados y secuencia controlada.
+- Chat con una sola pregunta por turno, basado en INSTRUCTIONS_APP.txt y la guía operativa v8, con registro de hechos acreditados y secuencia controlada.
 - Entrada de texto o grabación desde el micrófono; la respuesta es escrita.
 - El asistente propone mini metas y tareas. Antes del montaje final, genera un plan estructurado y ejecuta `motor_pert.verificar(plan)`; si falla, no lo declara definitivo.
 - Descarga el resultado completo en PDF y el avance en JSON. Tras cerrar o recargar, el alumno puede volver a importar su JSON.
@@ -43,7 +43,7 @@ El archivo de avance debe descargarse antes de cerrar la página. No hay cuentas
 python -m unittest discover -s tests -v
 ```
 
-`tests/test_product.py` prueba un inventario completo, el PDF, bloqueo por fechas/capacidad, y restauración con revalidación. `tests/test_streamlit.py` prueba la contraseña, su rotación y una pregunta inicial con API simulada. Estas pruebas **no** sustituyen pruebas de punta a punta con un modelo real.
+`tests/test_product.py` prueba un inventario completo, el PDF, bloqueo por fechas/capacidad, y restauración con revalidación. `tests/test_streamlit.py` prueba la contraseña, su rotación y una pregunta inicial con API simulada. `tests/test_contingencies.py` valida rutas opcionales, courier y capacidad sin sumar alternativas. Estas pruebas **no** sustituyen pruebas de punta a punta con un modelo real.
 
 ## Modelo
 
@@ -51,4 +51,4 @@ El modelo de planificación por defecto es gpt-5.4. Se configura con PERT_MODEL;
 
 ## Archivos de referencia
 
-`resources/SKILL.md` y `EJEMPLOS_CALIDAD_PERT.txt` conservan el paquete 0.3.6 como referencia. La app usa `INSTRUCTIONS_APP.txt` (6904 caracteres) y la guía operativa v7 adaptada a la API. El PDF `Paso_10.pdf` proviene del material del taller. `motor_pert.py` proviene de la copia local auditada del verificador v4; el ZIP de distribución 0.3.6 no lo incluía. Antes de publicar, comparar con la versión del verificador instalada en el complemento privado si puede leerse.
+`resources/SKILL.md` y `EJEMPLOS_CALIDAD_PERT.txt` conservan el paquete 0.3.6 como referencia. La app usa `INSTRUCTIONS_APP.txt` (7558 caracteres) y la guía operativa v8 adaptada a la API. El PDF `Paso_10.pdf` proviene del material del taller. `motor_pert.py` proviene de la copia local auditada del verificador v4; el ZIP de distribución 0.3.6 no lo incluía. Antes de publicar, comparar con la versión del verificador instalada en el complemento privado si puede leerse.

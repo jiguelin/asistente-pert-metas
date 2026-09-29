@@ -106,6 +106,13 @@ def export_pdf(audit: dict) -> bytes:
                       f"{sum(d['conteo'].values())} notas; "
                       f"{d['capacidad_fila']-d['maximo_usado']} plazas libres "
                       "en la fila más ocupada.", body))
+    if motor.get('minutos_condicionales_maximos'):
+        out.append(_p(f"Trabajo base: {motor['minutos_base']:g} min. Reserva adicional: hasta {motor['minutos_condicionales_maximos']:g} min solo si se activa una contingencia. Las rutas alternativas no se suman ni se repiten.",body))
+    if plan.get('economia'):
+        e=plan['economia']
+        out.append(_p('Proyección empresarial',heading))
+        out.append(_p(f"Si se logran las ventas previstas: ingreso {e['ingreso_previsto']:.2f}; costo del inventario {e['costo_inventario']:.2f}; empaques normales {e['empaques_normales']:.2f}; publicidad {e['publicidad']:.2f}. Ganancia sin reposición: {e['utilidad_sin_reposicion']:.2f}; con una reposición de {e['costo_una_reposicion']:.2f}: {e['utilidad_con_una_reposicion']:.2f}.",body))
+        out.append(_p(f"Capital disponible {e['capital_disponible']:.2f}; hasta {e['costos_pendientes_maximos']:.2f} para los costos posteriores al inventario ya disponible, incluida una reposición. Importes en la moneda de tu meta.",body))
 
     if plan.get('finanzas') and plan.get('caja'):
         out.append(_p('Dinero reservado y libre', heading))
@@ -136,6 +143,8 @@ def export_pdf(audit: dict) -> bytes:
         info = [description, loc, f"Fechas: {note['inicio']} a {note['fin']}"]
         if note.get('principal'):
             info.append('Marca una estrella en esta nota rosa.')
+        if note.get('condicional'):
+            info.append('SOLO SI OCURRE: no es trabajo obligatorio; usa una sola ruta de contingencia.')
         for key, label in (("detalle", "Detalle"), ("criterio", "Criterio"),
                            ("evidencia", "Evidencia"), ("frecuencia", "Frecuencia")):
             if note.get(key):
@@ -148,6 +157,12 @@ def export_pdf(audit: dict) -> bytes:
                     (", ".join(note["sucesores"]) or "ninguno"))
         out.append(KeepTogether([_p(description, heading)] + [_p(x, small) for x in info[1:]]))
 
+    for group in plan.get('contingencias',[]):
+        out.append(_p(group['id']+' · rutas de contingencia',heading))
+        out.append(_p('Conserva una sola nota. Si aparece un daño, usa únicamente la ruta de su fecha de comprobación; si no hay daño, no ejecutes esta tarea. La fecha de llegada del proveedor y el día en que revisas/reenvías el paquete pueden ser distintos.',body))
+        for route in group['rutas']:
+            out.append(_p(f"Si se detecta en {route['activacion']['fecha']}: pedido {route['pedido']}; llegada del proveedor {route['llegada_reemplazo']}; revisión {route['revision_reemplazo']}; reenvío {route['reenvio']}; entrega prevista {route['entrega_reemplazo']}; comprobación {route['confirmacion']}.",body))
+            out.append(_p('Tiempo: '+', '.join(f"{s['fecha']}: {s['minutos']:g} min" for s in route['sesiones'])+'.',small))
     out.append(_p("Flechas que debes trazar", heading))
     out.append(_p("Línea continua: requisito real. Línea discontinua: "
                   "continuidad, contribución, apoyo o riesgo. Las flechas por sesión/evento "

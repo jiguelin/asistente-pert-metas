@@ -12,6 +12,7 @@ from openai import OpenAI
 
 from pert_core import PlanError, audit_plan, audit_with_scale, summary
 from intake import SCHEMA as INTAKE_SCHEMA, PROMPT as INTAKE_PROMPT, context, normalize, stage, QUESTIONS, calculations, cash_schedule
+from contingencies import capacity_schedule, compile_replacement
 
 TRACE = ContextVar("pert_qa_trace", default=None)
 ROOT = Path(__file__).resolve().parent
@@ -48,10 +49,14 @@ def _user_visible_question_count(reply: str) -> int:
 def _create(client: OpenAI, _stream_retry=True, **kwargs: Any):
     # SDK call isolated for test doubles and future model migration.
     started = time.monotonic()
+    terminal = None
     # Consume server events while reasoning and generating; no partial draft
     # is shown to the student. This avoids a silent, long HTTP response.
     try:
         with client.responses.stream(**kwargs) as stream:
+            for event in stream:
+                if event.type in ['response.completed','response.incomplete','response.failed']:
+                    terminal=event.response
             result = stream.get_final_response()
     except Exception as exc:
         trace=TRACE.get()
@@ -63,9 +68,16 @@ def _create(client: OpenAI, _stream_retry=True, **kwargs: Any):
             message=re.sub(r'sk-[\w-]+','[REDACTADO]',str(message))
             trace.append({'step':kwargs.get('text',{}).get('format',{}).get('name','plan'),
                           'error':type(exc).__name__,'status':getattr(exc,'status_code',None),
-                          'message':message[:600],'seconds':round(time.monotonic()-started,2)})
+                          'message':message[:600],'seconds':round(time.monotonic()-started,2),
+                          'incomplete_reason':getattr(getattr(terminal,'incomplete_details',None),'reason',None),
+                          'usage':terminal.usage.model_dump() if terminal is not None and terminal.usage else None})
         if _stream_retry and isinstance(exc,RuntimeError) and 'response.completed' in str(exc):
-            return _create(client,_stream_retry=False,**kwargs)
+            retry_args=dict(kwargs)
+            if getattr(getattr(terminal,'incomplete_details',None),'reason',None)=='max_output_tokens':
+                previous=kwargs.get('max_output_tokens',8000)
+                if previous>=32000:raise
+                retry_args['max_output_tokens']=min(32000,previous*2)
+            return _create(client,_stream_retry=False,**retry_args)
         raise
     trace = TRACE.get()
     if trace is not None:
@@ -88,6 +100,13 @@ def respond(client: OpenAI, model: str, messages: list[dict[str, str]],
     usage['snapshot']=snapshot
     current=stage(snapshot); facts=snapshot['facts']
     if current=='final':return 'Estoy verificando tu plan completo.',True,usage
+    if current=='criterio':
+        term=str(snapshot.get('ambiguedad_esencial') or '').strip()
+        if term and len(term)<=100 and not any(c in term for c in ['?','¿','\n']) and any(term.casefold() in m['content'].casefold() for m in messages if m['role']=='user'):
+            reply=f'Para poder comprobar la meta, ¿qué característica concreta debe cumplirse cuando dices «{term}»?'
+        else:
+            reply='¿Qué resultado observable te permitirá comprobar que lograste tu meta?'
+        return reply,False,usage
     if current in QUESTIONS and not (current=='habilidades' and 'no sé' in messages[-1]['content'].lower()):
         reply=QUESTIONS[current]
         if current=='situacion':
@@ -165,6 +184,10 @@ def review(client,model,messages,candidate,math_facts,phase,usage):
       'reserva y gastos ya pagados, insumos previos, todas las sesiones y cada conexión causal/apoyo necesaria. '
       'La geometría, dimensiones y fechas principales ya fueron comparadas por código con los datos confirmados. No inventes errores de esos campos. '
       'Papeles disponibles no significa papeles obligatorios: se pueden usar menos. papel son dimensiones, nota es post-it pequeño y meta es el grande. '
+      'Las contingencias contienen rutas MUTUAMENTE EXCLUYENTES: se ejecuta como máximo una, solo si ocurre la condición. Reservar minutos no vuelve obligatorio el daño. No sumar las cuatro rutas como trabajo real. '
+      'La aplicación adapta la misma reposición de 40 minutos a cada entrega posible, usando horarios confirmados y calendario del proveedor. Son alternativas del mismo procedimiento aprobado, no tareas añadidas. '
+      'Si el capital disponible cubre todos los costos pendientes, economia calculada demuestra liquidez y utilidad; no exigir una caja por fechas de un daño que no se sabe si ocurrirá. '
+      'Reservar 55 de 200 inicialmente disponibles deja 145 libres: esa decisión del plan no contradice el disponible inicial. No confundir disponible previo con libre posterior a reserva. '
       'No exigir post-it para cada conocimiento previo (sumar o filtrar); son situación actual. '
       'inicio de una habilidad es comienzo de aprendizaje; no afirma dominio desde ese día. '
       'Se pueden precisar procedimientos y comprobaciones usando los recursos ya declarados, dentro de los mismos minutos y criterios. Eso no es inventar nuevos requisitos. '
@@ -195,6 +218,12 @@ pendientes [] si todo está resuelto. Incluye además detalles dentro de cada no
 detalle (breve), frecuencia (en T recurrentes), criterio (en M/MP) si son conocidos.
 Las notas pequeñas llevan ID y 2–4 palabras; texto completo y evidencia en detalle/criterio.
 Marca principal:true en UN obstáculo O que coincida con el principal declarado.
+Conserva las fechas límite de M ya aceptadas aunque sus tareas puedan terminar antes.
+Para reposición opcional, una sola T con workflow:"reposicion", activador:ID de la tarea
+que confirma las entregas y detecta daños. La aplicación programará rutas alternativas
+de 10 min pedido + 5 min revisión + 15 min reempaque/reenvío + 10 min comprobación,
+adaptadas al día de incidencia; NO inventes fecha de daño ni hagas obligatorio que ocurra.
+Mantén una sola nota y las conexiones necesarias con resultados y cierre.
 El campo consolidaciones explica IDs agrupados; no duplica sus sesiones.
 Consolida ANTES de crear el JSON las tareas con igual procedimiento y recursos.
 Ejemplo: simulacros del 22–26 y prueba final del 30 son UNA tarea con sesiones
@@ -239,6 +268,22 @@ def build_final(client: OpenAI, model: str, messages: list[dict[str, str]],
             if cash is not None:
                 plan['finanzas']=True
                 plan['caja']=cash
+            capacity=capacity_schedule(snapshot['facts'])
+            if capacity is not None:plan['capacidad']=capacity
+            compile_replacement(plan,snapshot['facts'])
+            facts=snapshot['facts']
+            if (facts.get('tipo')=='empresa' and all(k in facts for k in ['unidades','precio','costo','empaque','publicidad','capital'])
+                    and facts.get('inventario_disponible')=='true' and facts.get('otros_costos')=='0'
+                    and facts.get('primer_envio_cliente')=='true'):
+                units=float(facts['unidades']);income=units*float(facts['precio'])
+                stock=units*float(facts['costo']);packs=units*float(facts['empaque']);ads=float(facts['publicidad'])
+                replacement=float(facts.get('reposicion','0')) or sum(float(facts.get(k,'0')) for k in ['reposicion_caja','reposicion_empaque','reposicion_envio'])
+                maximum=packs+ads+replacement
+                plan['economia']={'ingreso_previsto':income,'costo_inventario':stock,'empaques_normales':packs,'publicidad':ads,'costo_una_reposicion':replacement,
+                                  'utilidad_sin_reposicion':income-stock-packs-ads,'utilidad_con_una_reposicion':income-stock-packs-ads-replacement,
+                                  'capital_disponible':float(facts['capital']),'costos_pendientes_maximos':maximum}
+                if float(facts['capital'])>=maximum:
+                    plan['finanzas']=False;plan['caja']=[]
             principal=snapshot['facts'].get('principal','').lower()
             if principal and principal not in ['ninguno','ningún obstáculo','no tengo obstáculos']:
                 if sum(n.get('tipo')=='O' and n.get('principal') is True for n in plan['notas'])!=1:
@@ -263,7 +308,7 @@ def build_final(client: OpenAI, model: str, messages: list[dict[str, str]],
             verdict=review(client,model,messages,json.dumps(semantic_candidate,ensure_ascii=False),math_facts,'final',usage)
             if not verdict['ok']:raise PlanError(verdict['problems'])
             return audit, [], usage
-        except (json.JSONDecodeError, PlanError, TypeError) as exc:
+        except (ValueError, KeyError, TypeError) as exc:
             problems = exc.problems if isinstance(exc, PlanError) else [str(exc)]
             extra = ("ERROR DEL BORRADOR ANTERIOR (corrígelo con los datos reales, "
                      "sin borrar trabajos ni cambiar el criterio de la meta): "
@@ -280,4 +325,6 @@ def final_message(audit: dict) -> str:
              "El esfuerzo indicado corresponde a realizar las tareas para alcanzar tu meta durante ese plazo.",
              "**Tres pasos:** prepara los papelógrafos, pega cada nota según el PDF y traza las flechas indicadas.",
              "Descarga el PDF para ver todas las notas, posiciones, fechas y conexiones."]
+    if audit['motor'].get('minutos_condicionales_maximos'):
+        lines.insert(4,f"Incluye {audit['motor']['minutos_base']:g} min de trabajo base y hasta {audit['motor']['minutos_condicionales_maximos']:g} min solo si ocurre la contingencia; no se suman sus rutas alternativas.")
     return "\n\n".join(lines)

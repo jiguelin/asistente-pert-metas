@@ -6,6 +6,16 @@ from pert_assistant import build_final, _create
 from test_product import sample_plan
 
 class FinalApiContractTests(unittest.TestCase):
+    def test_incomplete_budget_retries_with_more_room(self):
+        client=MagicMock();first=MagicMock();second=MagicMock()
+        terminal=SimpleNamespace(incomplete_details=SimpleNamespace(reason='max_output_tokens'),usage=None)
+        first.__enter__.return_value.__iter__.return_value=iter([SimpleNamespace(type='response.incomplete',response=terminal)])
+        first.__enter__.return_value.get_final_response.side_effect=RuntimeError("Didn't receive a `response.completed` event.")
+        second.__enter__.return_value.get_final_response.return_value=SimpleNamespace(output_text='completo',usage=None)
+        client.responses.stream.side_effect=[first,second]
+        _create(client,model='test',max_output_tokens=3000)
+        self.assertEqual(client.responses.stream.call_args_list[1].kwargs['max_output_tokens'],6000)
+
     def test_interrupted_stream_retries_once(self):
         client=MagicMock();first=MagicMock();second=MagicMock()
         first.__enter__.return_value.get_final_response.side_effect=RuntimeError("Didn't receive a `response.completed` event.")

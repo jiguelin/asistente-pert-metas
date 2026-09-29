@@ -1,4 +1,4 @@
-GUIA OPERATIVA DEL PERT CHART FISICO — VERSION 7 (APP)
+GUIA OPERATIVA DEL PERT CHART FISICO — VERSION 8 (APP)
 Taller de Metas y Planificación Estratégica
 
 CONTROL DE SALIDA: comprobar también el texto FINAL, no solo el plan cargado.
@@ -118,5 +118,15 @@ Si una escala semanal no cabe, comprobar meses naturales completos o parciales, 
 La cantidad de papelógrafos disponibles no obliga a usarlos todos. Destacar exactamente el obstáculo principal declarado con una estrella en su nota rosa.
 
 15. RESERVAS INTERMEDIAS Y COURIER
-En cada cobro de fin de mes, separar los gastos del mes siguiente antes de llamar libre al saldo; no restar esa misma reserva otra vez del saldo. Con saldo inicial 1500, octubre pagado, ingreso2200 y gasto1200: octubre saldo3700/reserva1200/libre2500; noviembre4700/1200/3500; diciembre5700/1200/4500. El cierre no garantiza liquidez anterior: comprobar también cada saldo intermedio.
+En cada cobro de fin de mes, separar los gastos del mes siguiente antes de llamar libre al saldo; no restar esa misma reserva otra vez del saldo. Con saldo inicial 1500, octubre pagado, ingreso 2200 y gasto 1200: octubre saldo3700/reserva1200/libre2500; noviembre4700/1200/3500; diciembre5700/1200/4500. El cierre no garantiza liquidez anterior: comprobar también cada saldo intermedio.
 Para una entrega normal con posible reposición, calcular hacia atrás desde el último día de entrega hábil antes del límite. Respetar recogida, tránsito, llegada del reemplazo, empaque nuevo, reenvío y comprobación final. Todos los cobros normales preceden a sus envíos; la fecha de un hito es un límite, no permiso para cobrar después del último envío. Las tareas variables necesitan cantidades, fechas y minutos concretos.
+
+16. ACLARACIONES DE LA META
+Revisar cada respuesta de aclaración. Profesional, bien presentado u ordenado sin característica observable no se resuelven sustituyéndolos por otras palabras vagas. Pedir una sola característica concreta. No proponer nuevos requisitos ni pedir aceptar un criterio aún impreciso. Caminar 5 km con buena energía ya ofrece una cantidad observable; no exige definir energía.
+
+
+17. CONTINGENCIAS Y DISPONIBILIDAD REAL
+Una reposición opcional se representa con una sola tarea y nota, marcada «solo si ocurre». Reservar tiempo o dinero no significa que haya ocurrido un daño. La aplicación genera una ruta por fecha real de comprobación de entrega, valida cada alternativa por separado y conserva la mayor reserva diaria/semanal compatible con la disponibilidad. No sumar alternativas mutuamente excluyentes ni incluir una tarea condicional en el calendario obligatorio. Explicar expresamente si se cubre como máximo una incidencia; varias requieren otro cálculo.
+Cada ruta conserva detección, pedido, llegada del proveedor, revisión del paquete, empaque/reenvío, entrega y comprobación. La llegada puede preceder al día en que el alumno tiene tiempo para revisarla. Respetar días hábiles, sábados de recogida confirmados y plazos de hitos aceptados. Un hito con límite 10/11 no cambia a 7/11 porque los despachos terminen antes.
+El patrón de minutos por día de la semana y cualquier excepción declarada son límites. No convertir 30 minutos de un domingo en 60. La reserva adicional de tiempo se informa por separado del trabajo base y del tiempo de montaje.
+En una empresa con inventario ya disponible, primer envío pagado por el comprador y declaración de ausencia de otros costos, la aplicación puede comprobar los costos pendientes contra el capital inicial. La utilidad sigue incluyendo el costo de ese inventario. Presentar utilidad prevista sin incidencia y con una reposición; no fingir una fecha cierta de daño ni un gasto que todavía no existe. Si esas condiciones no están acreditadas, conservar el análisis completo de caja y costos.
