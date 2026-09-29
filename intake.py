@@ -118,6 +118,7 @@ def calculations(f):
         out.append(f'CALENDARIO CALCULADO: inicio {a}, fin {b}, {n} días inclusivos; escala provisional {scale}.')
         if n<=370:
             weekdays=['lunes','martes','miércoles','jueves','viernes','sábado','domingo']
+            out.append('Cantidad de días reales: '+', '.join(f'{name}: {sum((a+timedelta(days=k)).weekday()==idx for k in range(n))}' for idx,name in enumerate(weekdays)))
             out.append('Fechas y días reales: '+', '.join(f'{a+timedelta(days=k)} {weekdays[(a+timedelta(days=k)).weekday()]}' for k in range(n)))
         needed=['saldo','ingreso','gasto','reserva','objetivo','gastos_inicio_pagados','cobro_fin_mes']
         if f.get('tipo')=='ahorro' and all(k in f for k in needed) and f['cobro_fin_mes']=='true':

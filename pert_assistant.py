@@ -81,17 +81,19 @@ def respond(client: OpenAI, model: str, messages: list[dict[str, str]],
             +'\nAmbigüedad esencial: '+str(snapshot['ambiguedad_esencial'])+'\n'+math_facts
             +'\nDevuelve reply breve, máximo unas 450 palabras. finalize=false. Ningún montaje físico, coordenadas, conteos ni instrucciones de pegar. Los números calculados arriba son obligatorios.')
     repair=''
+    repair_problems=[]
     for _ in range(3):
         resp=_create(client,model=model,instructions=prompt+repair,input=messages,
                      text={"format":{"type":"json_schema","name":"pert_turn","strict":True,"schema":TURN_SCHEMA}},
-                     reasoning={"effort":"low"},max_output_tokens=6000,store=False)
+                     reasoning={"effort":"medium"},max_output_tokens=8000,store=False)
         add_usage(usage,resp)
         try:
             data=json.loads(resp.output_text);reply=data['reply'].strip()
             if not reply or _user_visible_question_count(reply)>1:raise ValueError('Respuesta vacía o varias preguntas')
             verdict=review(client,model,messages,reply,math_facts,current,usage)
             if verdict['ok']:return reply,False,usage
-            repair='\nCORRIGE INTERNAMENTE ESTE ERROR, SIN MOSTRAR EL BORRADOR: '+ '; '.join(verdict['problems'])
+            repair_problems.extend(verdict['problems'])
+            repair='\nREPARA ESTE BORRADOR SIN MOSTRARLO: '+reply+'\nERRORES A CORREGIR SIN REINTRODUCIR ERRORES PREVIOS: '+ '; '.join(dict.fromkeys(repair_problems))
         except (ValueError,TypeError,KeyError):
             repair='\nLa respuesta anterior estuvo incompleta. Genera el JSON completo, breve y con una sola pregunta.'
     raise AssistantError('No pude completar este paso ahora. Tu avance se conserva; puedes reintentar.')
@@ -128,6 +130,10 @@ def review(client,model,messages,candidate,math_facts,phase,usage):
       'pide varios datos, repite preguntas ya resueltas, omite una restricción o entrega montaje sin validar. '
       'NO pidas perfección irrelevante ni métricas de energía si caminar 5 km ya es observable. '
       'En fase mini exige resultados con fecha y evidencia, no actividades ni cifras elevadas sobre el umbral. '
+      'Un documento terminado con contenido y evidencia es un resultado válido; no lo rechaces por ser un entregable. '
+      'La pregunta única de aceptación conjunta es obligatoria y correcta: no exigir que el texto público explique esta auditoría interna. '
+      'No vuelvas a restar una reserva ya descontada en un saldo libre intermedio. '
+      'Revisar gastos de un mes ya pagado no equivale a restarlos otra vez; rechaza solo si realmente recalcula o exige ese gasto adicional. '
       'En tareas exige todas las fechas/minutos/frecuencias dentro de disponibilidad, sin tareas recurrentes duplicadas. '
       'En final verifica coherencia semántica de TODO el plan: inventario aprobado completo, evidencia autónoma, '
       'reserva y gastos ya pagados, insumos previos, todas las sesiones y cada conexión causal/apoyo necesaria. '
@@ -176,7 +182,7 @@ def build_final(client: OpenAI, model: str, messages: list[dict[str, str]],
                        + f"\nHoy en Lima: {today_lima}.\n" + math_facts
                        + '\nHechos acreditados: '+json.dumps(snapshot['facts'],ensure_ascii=False)+'\n'+extra,
                        input=messages, text={"format": {"type": "json_object"}},
-                       reasoning={"effort":"low"},max_output_tokens=32000, store=False)
+                       reasoning={"effort":"medium"},max_output_tokens=32000, store=False)
         usage["input_tokens"] += resp.usage.input_tokens
         usage["output_tokens"] += resp.usage.output_tokens
         try:
