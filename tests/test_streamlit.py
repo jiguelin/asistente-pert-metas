@@ -51,7 +51,7 @@ class UiTests(unittest.TestCase):
         at.text_input[0].input("metas").run()
         at.button[0].click().run()
         fake = ("¿Qué significa estar en forma para ti?",False,{"input_tokens":100,"output_tokens":20})
-        with patch("assistant_engine.respond", return_value=fake):
+        with patch("pert_assistant.respond", return_value=fake):
             at.chat_input[0].set_value("Quiero estar en forma").run()
         self.assertFalse(at.exception)
         self.assertEqual(at.session_state.messages[-1]["content"],
@@ -64,13 +64,13 @@ class UiTests(unittest.TestCase):
         at.run()
         at.text_input[0].input("metas").run()
         at.button[0].click().run()
-        with patch("assistant_engine.respond", side_effect=RuntimeError("simulated")):
+        with patch("pert_assistant.respond", side_effect=RuntimeError("simulated")):
             at.chat_input[0].set_value("Quiero aprender inglés").run()
         self.assertFalse(at.session_state.messages)
         self.assertEqual(at.session_state.pending_text, "Quiero aprender inglés")
         at.run()
         fake = ("¿Cómo demostrarás que aprendiste inglés?",False,{"input_tokens":100,"output_tokens":20})
-        with patch("assistant_engine.respond", return_value=fake):
+        with patch("pert_assistant.respond", return_value=fake):
             next(b for b in at.button if b.label == "Reintentar mi mensaje").click().run()
         self.assertEqual([m["role"] for m in at.session_state.messages], ["user", "assistant"])
         self.assertIsNone(at.session_state.pending_text)
@@ -84,7 +84,7 @@ class UiTests(unittest.TestCase):
         at=AppTest.from_file(APP)
         at.secrets['EVENT_PASSWORD']='metas';at.secrets['OPENAI_API_KEY']='not-used'
         at.run();at.text_input[0].input('metas').run();at.button[0].click().run()
-        with patch('progress.export_progress',side_effect=capture),patch('assistant_engine.respond',return_value=('¿En qué fecha empiezas?',False,{})):
+        with patch('progress.export_progress',side_effect=capture),patch('pert_assistant.respond',return_value=('¿En qué fecha empiezas?',False,{})):
             at.chat_input[0].set_value('Quiero caminar 5 km seguidos.').run()
         self.assertEqual(exported[-1]['messages'][-1]['content'],'¿En qué fecha empiezas?')
         self.assertEqual(len(exported[-1]['messages']),2)

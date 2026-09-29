@@ -2,7 +2,7 @@ import io
 import json
 import unittest
 
-from assistant_engine import _user_visible_question_count
+from pert_assistant import _user_visible_question_count
 from pdf_export import export_pdf
 from pert_core import PlanError, audit_plan, summary
 from progress import export_progress, import_progress

@@ -10,7 +10,7 @@ from zoneinfo import ZoneInfo
 import streamlit as st
 from openai import OpenAI, APIError, RateLimitError
 
-from assistant_engine import AssistantError, build_final, final_message, respond
+from pert_assistant import AssistantError, build_final, final_message, respond
 from pdf_export import export_pdf
 from progress import export_progress, import_progress
 
