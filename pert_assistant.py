@@ -204,7 +204,8 @@ def build_final(client: OpenAI, model: str, messages: list[dict[str, str]],
         resp = _create(client, model=model, instructions=_instructions() + "\n" + PLAN_PROMPT
                        + f"\nHoy en Lima: {today_lima}.\n" + math_facts
                        + '\nHechos acreditados: '+json.dumps(snapshot['facts'],ensure_ascii=False)+'\n'+extra,
-                       input=messages, text={"format": {"type": "json_object"}},
+                       input=messages + [{"role":"user","content":"Genera exclusivamente el objeto JSON completo del plan aprobado, sin texto conversacional."}],
+                       text={"format": {"type": "json_object"}},
                        reasoning={"effort":"medium"},max_output_tokens=32000, store=False)
         usage["input_tokens"] += resp.usage.input_tokens
         usage["output_tokens"] += resp.usage.output_tokens
