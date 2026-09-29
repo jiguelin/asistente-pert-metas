@@ -93,6 +93,7 @@ with st.sidebar:
     st.header("Mi avance")
     if st.query_params.get("qa") == "1":
         import json
+        st.caption("__QA_RUN__:" + st.query_params.get("qa_run_id", ""))
         st.download_button("Diagnóstico de prueba", json.dumps(st.session_state.qa_trace,ensure_ascii=False),file_name="qa_trace.json",mime="application/json")
     if st.button("Empezar otro PERT", use_container_width=True):
         st.session_state.messages = []

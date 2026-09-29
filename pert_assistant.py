@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import json
 import time
+import re
 from contextvars import ContextVar
 from pathlib import Path
 from typing import Any
@@ -49,8 +50,21 @@ def _create(client: OpenAI, **kwargs: Any):
     started = time.monotonic()
     # Consume server events while reasoning and generating; no partial draft
     # is shown to the student. This avoids a silent, long HTTP response.
-    with client.responses.stream(**kwargs) as stream:
-        result = stream.get_final_response()
+    try:
+        with client.responses.stream(**kwargs) as stream:
+            result = stream.get_final_response()
+    except Exception as exc:
+        trace=TRACE.get()
+        if trace is not None:
+            body=getattr(exc,'body',{}) or {}
+            if isinstance(body,dict):
+                body=body.get('error',body)
+            message=body.get('message','') if isinstance(body,dict) else ''
+            message=re.sub(r'sk-[\w-]+','[REDACTADO]',str(message))
+            trace.append({'step':kwargs.get('text',{}).get('format',{}).get('name','plan'),
+                          'error':type(exc).__name__,'status':getattr(exc,'status_code',None),
+                          'message':message[:600],'seconds':round(time.monotonic()-started,2)})
+        raise
     trace = TRACE.get()
     if trace is not None:
         trace.append({"step":kwargs.get("text",{}).get("format",{}).get("name","plan"),"output":result.output_text,
