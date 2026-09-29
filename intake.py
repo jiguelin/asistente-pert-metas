@@ -56,8 +56,9 @@ def context(messages):
     return users,'\n'.join(lines)
 
 
-def normalize(payload, users):
-    facts={}
+def normalize(payload, users, known_facts=None):
+    facts={k:v for k,v in (known_facts or {}).items()
+           if k not in ['mini_aprobadas','tareas_aprobadas']}
     for h in payload['hechos']:
         i=h['usuario'];q=h['cita']
         # Source text is authoritative; a mistaken message index must not

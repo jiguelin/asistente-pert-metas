@@ -6,7 +6,6 @@ from typing import Any
 
 VERSION = 1
 MAX_BYTES = 3_000_000
-MAX_MESSAGES = 150
 
 
 def export_progress(messages: list[dict], final: dict | None) -> bytes:
@@ -27,7 +26,7 @@ def import_progress(raw: bytes) -> dict[str, Any]:
     if not isinstance(data, dict) or data.get("schema_version") != VERSION:
         raise ValueError("Versión de avance no compatible")
     msgs = data.get("messages")
-    if not isinstance(msgs, list) or len(msgs) > MAX_MESSAGES:
+    if not isinstance(msgs, list):
         raise ValueError("Historial inválido")
     for msg in msgs:
         if (not isinstance(msg, dict) or msg.get("role") not in ("user", "assistant")
@@ -41,4 +40,3 @@ def import_progress(raw: bytes) -> dict[str, Any]:
         # Never trust a saved ok flag or old coordinates.
         final = audit_plan(final["plan"])
     return {"messages": msgs, "final": final}
-

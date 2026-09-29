@@ -27,4 +27,11 @@ class IntakeTests(unittest.TestCase):
         f={'tipo':'empresa','unidades':'10','precio':'100','costo':'40','empaque':'5','publicidad':'40','reposicion_caja':'40','reposicion_empaque':'5','reposicion_envio':'10'}
         self.assertIn('reposición 455',calculations(f))
 
+    def test_known_dimensions_survive_omission_but_approval_does_not(self):
+        previous={'meta_nota':'[15,15]','mini_aprobadas':'true'}
+        payload={'ambiguedad_esencial':None,'meta_verificable':True,'hechos':[]}
+        facts=normalize(payload,['Sí'],previous)['facts']
+        self.assertEqual(facts['meta_nota'],'[15,15]')
+        self.assertNotIn('mini_aprobadas',facts)
+
 if __name__=='__main__':unittest.main()

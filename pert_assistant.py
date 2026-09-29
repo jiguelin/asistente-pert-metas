@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import time
 from contextvars import ContextVar
 from pathlib import Path
 from typing import Any
@@ -45,15 +46,21 @@ def _user_visible_question_count(reply: str) -> int:
 
 def _create(client: OpenAI, **kwargs: Any):
     # SDK call isolated for test doubles and future model migration.
-    result = client.responses.create(**kwargs)
+    started = time.monotonic()
+    # Consume server events while reasoning and generating; no partial draft
+    # is shown to the student. This avoids a silent, long HTTP response.
+    with client.responses.stream(**kwargs) as stream:
+        result = stream.get_final_response()
     trace = TRACE.get()
     if trace is not None:
-        trace.append({"step":kwargs.get("text",{}).get("format",{}).get("name","plan"),"output":result.output_text})
+        trace.append({"step":kwargs.get("text",{}).get("format",{}).get("name","plan"),"output":result.output_text,
+                      "seconds":round(time.monotonic()-started,2),
+                      "usage":result.usage.model_dump() if result.usage else None})
     return result
 
 
 def respond(client: OpenAI, model: str, messages: list[dict[str, str]],
-            today_lima: str) -> tuple[str, bool, dict]:
+            today_lima: str, known_facts=None) -> tuple[str, bool, dict]:
     if not messages:
         return "¿Cuál es tu Meta Principal?", False, {}
     if len(messages) == 1 and "revis" in messages[0]["content"].lower() \
@@ -61,7 +68,8 @@ def respond(client: OpenAI, model: str, messages: list[dict[str, str]],
             and len(messages[0]["content"]) < 90:
         return "¿Puedes compartir el PERT que ya empezaste?", False, {}
     usage={"input_tokens":0,"output_tokens":0}
-    snapshot = extract_intake(client, model, messages, today_lima, usage)
+    snapshot = extract_intake(client, model, messages, today_lima, usage, known_facts)
+    usage['snapshot']=snapshot
     current=stage(snapshot); facts=snapshot['facts']
     if current=='final':return 'Estoy verificando tu plan completo.',True,usage
     if current in QUESTIONS and not (current=='habilidades' and 'no sé' in messages[-1]['content'].lower()):
@@ -104,7 +112,7 @@ def add_usage(usage,resp):
         for k in ['input_tokens','output_tokens']:usage[k]+=getattr(resp.usage,k,0)
 
 
-def extract_intake(client,model,messages,today,usage):
+def extract_intake(client,model,messages,today,usage,known_facts=None):
     users, transcript=context(messages)
     for _ in range(2):
         resp=_create(client,model=model,instructions=INTAKE_PROMPT+f'\nHoy en Lima: {today}.',
@@ -112,7 +120,7 @@ def extract_intake(client,model,messages,today,usage):
                      reasoning={"effort":"low"},max_output_tokens=8000,store=False)
         add_usage(usage,resp)
         try:
-            snapshot=normalize(json.loads(resp.output_text),users)
+            snapshot=normalize(json.loads(resp.output_text),users,known_facts)
             if snapshot['meta_verificable'] and 'meta' not in snapshot['facts']:
                 continue
             return snapshot
@@ -129,6 +137,7 @@ def review(client,model,messages,candidate,math_facts,phase,usage):
       'Devuelve ok=false con errores concretos si inventa datos o criterios, cambia la meta, contradice los cálculos, '
       'pide varios datos, repite preguntas ya resueltas, omite una restricción o entrega montaje sin validar. '
       'NO pidas perfección irrelevante ni métricas de energía si caminar 5 km ya es observable. '
+      'Conserva buena energía en el texto como preferencia; no exigir poder conversar, ir más rápido ni otras pruebas no pedidas. '
       'En fase mini exige resultados con fecha y evidencia, no actividades ni cifras elevadas sobre el umbral. '
       'Un documento terminado con contenido y evidencia es un resultado válido; no lo rechaces por ser un entregable. '
       'La pregunta única de aceptación conjunta es obligatoria y correcta: no exigir que el texto público explique esta auditoría interna. '
@@ -170,11 +179,11 @@ fingir un plan completo. Solo un JSON, sin marcas Markdown.
 
 
 def build_final(client: OpenAI, model: str, messages: list[dict[str, str]],
-                today_lima: str) -> tuple[dict | None, list[str], dict]:
+                today_lima: str, ready_snapshot=None) -> tuple[dict | None, list[str], dict]:
     """Ask for a full machine-readable plan; retry only to repair internal errors."""
     extra = ""
     usage = {"input_tokens": 0, "output_tokens": 0}
-    snapshot=extract_intake(client,model,messages,today_lima,usage)
+    snapshot=ready_snapshot or extract_intake(client,model,messages,today_lima,usage)
     if stage(snapshot)!='final':return None,[QUESTIONS.get(stage(snapshot),'aceptación del cronograma completo')],usage
     math_facts=calculations(snapshot['facts'])
     for _ in range(3):
@@ -209,6 +218,7 @@ def final_message(audit: dict) -> str:
     lines = ["Tu PERT está verificado para el montaje físico.",
              f"**Meta Principal:** {mp.get('criterio') or mp.get('detalle') or mp['texto']}",
              f"**Del {p['inicio']} al {p['fin']}:** {summary(audit)}",
+             "El esfuerzo indicado corresponde a realizar las tareas para alcanzar tu meta durante ese plazo.",
              "**Tres pasos:** prepara los papelógrafos, pega cada nota según el PDF y traza las flechas indicadas.",
              "Descarga el PDF para ver todas las notas, posiciones, fechas y conexiones."]
     return "\n\n".join(lines)

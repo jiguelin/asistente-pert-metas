@@ -13,7 +13,6 @@ import streamlit as st
 from openai import OpenAI, APIError, RateLimitError
 
 from pdf_export import export_pdf
-from progress import export_progress, import_progress
 
 st.set_page_config(page_title="Asistente PERT Chart de Metas", page_icon="🟨",
                    layout="centered", initial_sidebar_state="collapsed")
@@ -24,19 +23,22 @@ def load_assistant_revision(signature):
     # Streamlit may refresh app.py while retaining imported Python modules.
     # Reload once per source revision, across sessions, before starting a turn.
     import intake
+    import progress
     import pert_assistant
     importlib.reload(intake)
+    importlib.reload(progress)
     return importlib.reload(pert_assistant)
 
 
 _source_root = Path(__file__).resolve().parent
 _revision = sha256(b"".join((_source_root / name).read_bytes()
-                          for name in ("intake.py", "pert_assistant.py"))).hexdigest()
+                          for name in ("intake.py", "pert_assistant.py", "progress.py"))).hexdigest()
 _assistant = load_assistant_revision(_revision)
 AssistantError = _assistant.AssistantError
 respond = _assistant.respond
 build_final = _assistant.build_final
 final_message = _assistant.final_message
+from progress import export_progress, import_progress
 
 
 def secret(name: str, default=None):
@@ -82,6 +84,7 @@ model = secret("PERT_MODEL", "gpt-5.4")
 transcription_model = secret("TRANSCRIPTION_MODEL", "gpt-transcribe")
 audio_seconds_limit = int(secret("MAX_AUDIO_SECONDS", 90))
 st.session_state.setdefault("qa_trace", [])
+st.session_state.setdefault("known_facts", {})
 st.session_state.setdefault("messages", [])
 st.session_state.setdefault("final", None)
 st.session_state.setdefault("usage", {"input_tokens": 0, "output_tokens": 0, "audio_seconds": 0.0})
@@ -96,6 +99,7 @@ with st.sidebar:
         st.session_state.final = None
         st.session_state.pending_text = None
         st.session_state.last_error = None
+        st.session_state.known_facts = {}
         st.session_state.usage = {"input_tokens": 0, "output_tokens": 0, "audio_seconds": 0.0}
         st.rerun()
     try:
@@ -117,6 +121,7 @@ with st.sidebar:
                 st.session_state.final = loaded["final"]
                 st.session_state.pending_text = None
                 st.session_state.last_error = None
+                st.session_state.known_facts = {}
                 st.session_state.loaded_fingerprint = fingerprint
                 st.rerun()
             except ValueError as exc:
@@ -191,13 +196,17 @@ try:
         with st.spinner("Preparando tu siguiente paso..."):
             _assistant.TRACE.set(st.session_state.qa_trace if st.query_params.get("qa") == "1" else None)
             reply, finalize, usage = respond(client, model, st.session_state.messages,
-                                             datetime.now(ZoneInfo("America/Lima")).date().isoformat())
+                                             datetime.now(ZoneInfo("America/Lima")).date().isoformat(),
+                                             known_facts=st.session_state.known_facts)
+            if usage.get('snapshot'):
+                st.session_state.known_facts = usage['snapshot']['facts']
             for key in ("input_tokens", "output_tokens"):
                 st.session_state.usage[key] += usage.get(key, 0)
             if finalize:
                 audit, missing, extra_usage = build_final(
                     client, model, st.session_state.messages,
-                    datetime.now(ZoneInfo("America/Lima")).date().isoformat())
+                    datetime.now(ZoneInfo("America/Lima")).date().isoformat(),
+                    ready_snapshot=usage.get('snapshot'))
                 for key in ("input_tokens", "output_tokens"):
                     st.session_state.usage[key] += extra_usage.get(key, 0)
                 if audit:
