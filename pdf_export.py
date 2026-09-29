@@ -4,6 +4,7 @@ from __future__ import annotations
 from html import escape
 from io import BytesIO
 from pathlib import Path
+import reportlab
 
 from reportlab.lib import colors
 from reportlab.lib.enums import TA_CENTER
@@ -20,6 +21,7 @@ def _font() -> str:
     candidates = [
         Path("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"),
         Path("/usr/share/fonts/truetype/liberation2/LiberationSans-Regular.ttf"),
+        Path(reportlab.__file__).resolve().parent / "fonts/Vera.ttf",
     ]
     for candidate in candidates:
         if candidate.exists():
@@ -30,7 +32,8 @@ def _font() -> str:
 
 
 def _p(value: object, style: ParagraphStyle) -> Paragraph:
-    return Paragraph(escape(str(value or "—")).replace("\n", "<br/>"), style)
+    text=str(value or "—").replace("→", "->").replace("✓", "un visto").replace("⭐", "*")
+    return Paragraph(escape(text).replace("\n", "<br/>"), style)
 
 
 def export_pdf(audit: dict) -> bytes:
@@ -73,12 +76,18 @@ def export_pdf(audit: dict) -> bytes:
                 _p(f"{audit['notas_pequenas']} notas pequeñas y una Meta Principal grande; "
                    f"{motor['papelografos']} papelógrafos; "
                    f"{motor['minutos_totales']} minutos de trabajo programado.", body)])
+    context=plan.get('contexto',{})
+    if context.get('situacion_actual'):
+        out.extend([_p('Situación actual',heading),_p(context['situacion_actual'],body)])
+    if plan.get('consolidaciones'):
+        out.append(_p('Se agruparon tareas con el mismo procedimiento; se conservan todas sus sesiones y minutos.',body))
 
     out.append(_p("Montaje en tres pasos", heading))
     for step in ("1. Prepara los papelógrafos horizontales, únelos de izquierda a derecha y dibuja las filas.",
                  "2. Marca las columnas temporales con los límites de abajo y pega cada nota en su papel, fila y coordenada.",
                  "3. Pega la Meta Principal grande en la zona final y dibuja las flechas según la lista de conexiones."):
         out.append(_p(step, body))
+    out.append(_p("Para cada tarea recurrente, dibuja una línea discontinua desde su nota hasta su fecha final, sin agregar post-it. Las flechas por evento se conectan a la fecha indicada en esa línea. Traza las flechas por los espacios libres, sin cruzar notas.",body))
     m = plan["materiales"]
     out.append(_p(f"Medidas en cm: papel {m['papel'][0]} × {m['papel'][1]}, "
                   f"nota pequeña {m['nota'][0]} × {m['nota'][1]} (un cuarto de post-it), "
@@ -115,7 +124,11 @@ def export_pdf(audit: dict) -> bytes:
                f"Papel {pos['papel']}, columna {pos['columna']}, fila {pos['fila']}; "
                f"x={pos['x']}, y={pos['y']} cm")
         description = (f"{note['id']} · {colors_by_type[note['tipo']]} · {note['texto']}")
+        if note.get('principal'):
+            description += ' · OBSTÁCULO PRINCIPAL'
         info = [description, loc, f"Fechas: {note['inicio']} a {note['fin']}"]
+        if note.get('principal'):
+            info.append('Marca una estrella en esta nota rosa.')
         for key, label in (("detalle", "Detalle"), ("criterio", "Criterio"),
                            ("evidencia", "Evidencia"), ("frecuencia", "Frecuencia")):
             if note.get(key):
@@ -130,10 +143,16 @@ def export_pdf(audit: dict) -> bytes:
 
     out.append(_p("Flechas que debes trazar", heading))
     out.append(_p("Línea continua: requisito real. Línea discontinua: "
-                  "continuidad o contribución. Las flechas por sesión/evento "
+                  "continuidad, contribución, apoyo o riesgo. Las flechas por sesión/evento "
                   "llevan la anotación indicada.", body))
+    grouped={}
     for edge in audit["flechas"]:
-        out.append(_p(f"{edge['desde']} → {edge['hacia']} · {edge['tipo']}", small))
+        grouped.setdefault((edge['desde'],edge['hacia']),[])
+        if edge['tipo'] not in grouped[(edge['desde'],edge['hacia'])]:
+            grouped[(edge['desde'],edge['hacia'])].append(edge['tipo'])
+    out.append(_p('Dibuja una sola flecha por pareja de IDs; conserva en ella todas las anotaciones indicadas.',body))
+    for (source,target),labels in grouped.items():
+        out.append(_p(f"{source} → {target} · {'; '.join(labels)}", small))
     out.append(_p("Seguimiento", heading))
     out.append(_p("Marca ✓ cuando completes una nota. Si hay retraso, marca X, "
                   "escribe la nueva fecha y revisa las notas que dependen de ella.", body))

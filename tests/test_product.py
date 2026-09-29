@@ -17,7 +17,7 @@ def sample_plan():
              "fin": "2026-10-02", "evidencia": "Registro de distancia", "detalle": "Medir una ruta de 5 km"},
             {"id": "M1", "tipo": "M", "texto": "Ruta medida", "inicio": "2026-10-02",
              "fin": "2026-10-02", "evidencia": "Captura del mapa"},
-            {"id": "O1", "tipo": "O", "texto": "Lluvia", "inicio": "2026-10-01",
+            {"id": "O1", "tipo": "O", "texto": "Lluvia", "principal": True, "inicio": "2026-10-01",
              "fin": "2026-10-31", "evidencia": "Ruta techada"},
             {"id": "H1", "tipo": "H", "texto": "Medir distancias", "inicio": "2026-10-01",
              "fin": "2026-10-01", "evidencia": "Ruta de prueba de 1 km"},

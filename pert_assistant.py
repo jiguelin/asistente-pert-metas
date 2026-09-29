@@ -160,6 +160,12 @@ def review(client,model,messages,candidate,math_facts,phase,usage):
       'En tareas exige todas las fechas/minutos/frecuencias dentro de disponibilidad, sin tareas recurrentes duplicadas. '
       'En final verifica coherencia semántica de TODO el plan: inventario aprobado completo, evidencia autónoma, '
       'reserva y gastos ya pagados, insumos previos, todas las sesiones y cada conexión causal/apoyo necesaria. '
+      'La geometría, dimensiones y fechas principales ya fueron comparadas por código con los datos confirmados. No inventes errores de esos campos. '
+      'Papeles disponibles no significa papeles obligatorios: se pueden usar menos. papel son dimensiones, nota es post-it pequeño y meta es el grande. '
+      'No exigir post-it para cada conocimiento previo (sumar o filtrar); son situación actual. '
+      'inicio de una habilidad es comienzo de aprendizaje; no afirma dominio desde ese día. '
+      'Se pueden precisar procedimientos y comprobaciones usando los recursos ya declarados, dentro de los mismos minutos y criterios. Eso no es inventar nuevos requisitos. '
+      'Simulacro autónomo y prueba final con la misma copia nueva, método y recursos deben ser UNA tarea, aunque cambie fecha o criterio. '
       'En otras fases NO exijas cronograma ni geometría que todavía no corresponde. '
       'Un presupuesto extra no mejora la ganancia. No confundir dinero libre con saldo. '
       f'FASE: {phase}\nCÁLCULOS OBLIGATORIOS:\n{math_facts}\n'
@@ -184,6 +190,14 @@ materiales {papel:[ancho,alto],nota:[ancho,alto],meta:[ancho,alto],pared:ancho_o
 pendientes [] si todo está resuelto. Incluye además detalles dentro de cada nota:
 detalle (breve), frecuencia (en T recurrentes), criterio (en M/MP) si son conocidos.
 Las notas pequeñas llevan ID y 2–4 palabras; texto completo y evidencia en detalle/criterio.
+Marca principal:true en UN obstáculo O que coincida con el principal declarado.
+El campo consolidaciones explica IDs agrupados; no duplica sus sesiones.
+Consolida ANTES de crear el JSON las tareas con igual procedimiento y recursos.
+Ejemplo: simulacros del 22–26 y prueba final del 30 son UNA tarea con sesiones
+22,23,24,25,26,30. La corrección del 27–29 puede ser otra tarea; usa dependencias
+POR EVENTO (simulacro26→corrección27, corrección29→prueba30), no una dependencia
+global que espere el final del recurrente. Conserva cada sesión y minuto.
+contexto puede resumir situación actual, sin convertir conocimiento previo en post-it.
 NO inventes una medida confirmada, disponibilidad, cálculo, reserva, fecha ni apoyo.
 No reduzcas sesiones, flechas o notas para pasar el verificador. Revisa sentido,
 calendario, insumos consumidos, horas simultáneas, presupuesto y restricciones.
@@ -213,7 +227,21 @@ def build_final(client: OpenAI, model: str, messages: list[dict[str, str]],
             plan = json.loads(resp.output_text)
             if set(plan) == {"pendientes"} and plan["pendientes"]:
                 return None, [str(x) for x in plan["pendientes"]], usage
+            plan['contexto']={'situacion_actual':snapshot['facts'].get('situacion',''),
+                              'obstaculo_principal':snapshot['facts'].get('principal','')}
+            principal=snapshot['facts'].get('principal','').lower()
+            if principal and principal not in ['ninguno','ningún obstáculo','no tengo obstáculos']:
+                if sum(n.get('tipo')=='O' and n.get('principal') is True for n in plan['notas'])!=1:
+                    raise PlanError(['Marca principal:true en exactamente un obstáculo O, el declarado por el alumno'])
             audit = audit_plan(plan)
+            facts=snapshot['facts']
+            if plan['inicio']!=facts['inicio'] or plan['fin']!=facts['fin']:
+                raise PlanError(['Las fechas principales deben ser exactamente las aportadas por el alumno'])
+            for target,source in [('papel','papel'),('nota','nota'),('meta','meta_nota')]:
+                if [float(x) for x in plan['materiales'][target]] != [float(x) for x in json.loads(facts[source])]:
+                    raise PlanError(['Medidas de '+target+' diferentes a las confirmadas'])
+            if float(plan['materiales']['pared'])!=float(facts['pared']):
+                raise PlanError(['Ancho de pared diferente al confirmado'])
             if audit['motor']['papelografos'] > int(snapshot['facts']['papeles']):
                 raise PlanError(['El montaje necesita más papelógrafos que los disponibles; no eliminar notas para hacer que quepa'])
             verdict=review(client,model,messages,json.dumps(plan,ensure_ascii=False),math_facts,'final',usage)

@@ -12,7 +12,6 @@ from zoneinfo import ZoneInfo
 import streamlit as st
 from openai import OpenAI, APIError, RateLimitError
 
-from pdf_export import export_pdf
 
 st.set_page_config(page_title="Asistente PERT Chart de Metas", page_icon="🟨",
                    layout="centered", initial_sidebar_state="collapsed")
@@ -24,21 +23,24 @@ def load_assistant_revision(signature):
     # Reload once per source revision, across sessions, before starting a turn.
     import intake
     import progress
+    import pdf_export
     import pert_assistant
     importlib.reload(intake)
     importlib.reload(progress)
+    importlib.reload(pdf_export)
     return importlib.reload(pert_assistant)
 
 
 _source_root = Path(__file__).resolve().parent
 _revision = sha256(b"".join((_source_root / name).read_bytes()
-                          for name in ("intake.py", "pert_assistant.py", "progress.py"))).hexdigest()
+                          for name in ("intake.py", "pert_assistant.py", "progress.py", "pdf_export.py"))).hexdigest()
 _assistant = load_assistant_revision(_revision)
 AssistantError = _assistant.AssistantError
 respond = _assistant.respond
 build_final = _assistant.build_final
 final_message = _assistant.final_message
 from progress import export_progress, import_progress
+from pdf_export import export_pdf
 
 
 def secret(name: str, default=None):

@@ -1,6 +1,6 @@
 # Asistente PERT Chart de Metas — app para el taller
 
-**Estado:** revisión de calidad en curso. Las cuatro conversaciones de la primera versión detectaron errores de calendario, flujo financiero y finalización. Esta revisión corrige el flujo y tiene 14 pruebas locales aprobadas; falta aprobar las cuatro conversaciones completas con API real y comprobar audio en teléfonos. No compartir con alumnos todavía.
+**Estado:** revisión de calidad en curso. Las cuatro conversaciones de la primera versión detectaron errores de calendario, flujo financiero y finalización. Esta revisión corrige el flujo y tiene 17 pruebas locales aprobadas; la revisión financiera ya completó el PDF con API real; falta aprobar las cuatro conversaciones completas con la revisión final y comprobar audio en teléfonos. No compartir con alumnos todavía.
 
 ## Qué hace
 
@@ -51,4 +51,4 @@ El modelo de planificación por defecto es gpt-5.4. Se configura con PERT_MODEL;
 
 ## Archivos de referencia
 
-`resources/SKILL.md`, `GUIA_OPERATIVA_PERT_FISICO.txt` y `EJEMPLOS_CALIDAD_PERT.txt` provienen del paquete local 0.3.6. El PDF `Paso_10.pdf` proviene del material del taller. `motor_pert.py` proviene de la copia local auditada del verificador v4; el ZIP de distribución 0.3.6 no lo incluía. Antes de publicar, comparar con la versión del verificador instalada en el complemento privado si puede leerse.
+`resources/SKILL.md` y `EJEMPLOS_CALIDAD_PERT.txt` conservan el paquete 0.3.6 como referencia. La app usa `INSTRUCTIONS_APP.txt` (6872 caracteres) y la guía operativa v7 adaptada a la API. El PDF `Paso_10.pdf` proviene del material del taller. `motor_pert.py` proviene de la copia local auditada del verificador v4; el ZIP de distribución 0.3.6 no lo incluía. Antes de publicar, comparar con la versión del verificador instalada en el complemento privado si puede leerse.
