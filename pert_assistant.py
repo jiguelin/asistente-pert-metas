@@ -104,7 +104,7 @@ def respond(client: OpenAI, model: str, messages: list[dict[str, str]],
             +'\nDevuelve reply breve, máximo unas 450 palabras. finalize=false. Ningún montaje físico, coordenadas, conteos ni instrucciones de pegar. Los números calculados arriba son obligatorios.')
     repair=''
     repair_problems=[]
-    for _ in range(3):
+    for _ in range(5):
         resp=_create(client,model=model,instructions=prompt+repair,input=messages,
                      text={"format":{"type":"json_schema","name":"pert_turn","strict":True,"schema":TURN_SCHEMA}},
                      reasoning={"effort":"medium"},max_output_tokens=8000,store=False)
@@ -165,6 +165,7 @@ def review(client,model,messages,candidate,math_facts,phase,usage):
       'No exigir post-it para cada conocimiento previo (sumar o filtrar); son situación actual. '
       'inicio de una habilidad es comienzo de aprendizaje; no afirma dominio desde ese día. '
       'Se pueden precisar procedimientos y comprobaciones usando los recursos ya declarados, dentro de los mismos minutos y criterios. Eso no es inventar nuevos requisitos. '
+      'En propuestas de tareas el GPT puede asignar IDs nuevos a habilidades declaradas y proponer métodos a aprobar; no exigir que el alumno hubiera inventado esos IDs o métodos. '
       'Simulacro autónomo y prueba final con la misma copia nueva, método y recursos deben ser UNA tarea, aunque cambie fecha o criterio. '
       'En otras fases NO exijas cronograma ni geometría que todavía no corresponde. '
       'Un presupuesto extra no mejora la ganancia. No confundir dinero libre con saldo. '
@@ -214,7 +215,7 @@ def build_final(client: OpenAI, model: str, messages: list[dict[str, str]],
     snapshot=ready_snapshot or extract_intake(client,model,messages,today_lima,usage)
     if stage(snapshot)!='final':return None,[QUESTIONS.get(stage(snapshot),'aceptación del cronograma completo')],usage
     math_facts=calculations(snapshot['facts'])
-    for _ in range(3):
+    for _ in range(5):
         resp = _create(client, model=model, instructions=_instructions() + "\n" + PLAN_PROMPT
                        + f"\nHoy en Lima: {today_lima}.\n" + math_facts
                        + '\nHechos acreditados: '+json.dumps(snapshot['facts'],ensure_ascii=False)+'\n'+extra,
@@ -229,6 +230,7 @@ def build_final(client: OpenAI, model: str, messages: list[dict[str, str]],
                 return None, [str(x) for x in plan["pendientes"]], usage
             plan['contexto']={'situacion_actual':snapshot['facts'].get('situacion',''),
                               'obstaculo_principal':snapshot['facts'].get('principal','')}
+            plan['materiales']['papelografos_disponibles']=int(snapshot['facts']['papeles'])
             principal=snapshot['facts'].get('principal','').lower()
             if principal and principal not in ['ninguno','ningún obstáculo','no tengo obstáculos']:
                 if sum(n.get('tipo')=='O' and n.get('principal') is True for n in plan['notas'])!=1:
@@ -244,7 +246,12 @@ def build_final(client: OpenAI, model: str, messages: list[dict[str, str]],
                 raise PlanError(['Ancho de pared diferente al confirmado'])
             if audit['motor']['papelografos'] > int(snapshot['facts']['papeles']):
                 raise PlanError(['El montaje necesita más papelógrafos que los disponibles; no eliminar notas para hacer que quepa'])
-            verdict=review(client,model,messages,json.dumps(plan,ensure_ascii=False),math_facts,'final',usage)
+            semantic_candidate={'contenido':plan,'montaje_validado_por_la_aplicacion':{
+                'papelografos_usados':audit['motor']['papelografos'],
+                'papelografos_disponibles':int(snapshot['facts']['papeles']),
+                'columnas':audit['columnas'],'zona_mp':audit['zona_mp'],
+                'posiciones':audit['motor']['posiciones'],'densidad':audit['motor']['densidad']}}
+            verdict=review(client,model,messages,json.dumps(semantic_candidate,ensure_ascii=False),math_facts,'final',usage)
             if not verdict['ok']:raise PlanError(verdict['problems'])
             return audit, [], usage
         except (json.JSONDecodeError, PlanError, TypeError) as exc:
