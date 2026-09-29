@@ -4,18 +4,39 @@ from __future__ import annotations
 from datetime import datetime
 from hashlib import sha256
 import hmac
+import importlib
+from pathlib import Path
 from io import BytesIO
 from zoneinfo import ZoneInfo
 
 import streamlit as st
 from openai import OpenAI, APIError, RateLimitError
 
-from pert_assistant import AssistantError, build_final, final_message, respond
 from pdf_export import export_pdf
 from progress import export_progress, import_progress
 
 st.set_page_config(page_title="Asistente PERT Chart de Metas", page_icon="🟨",
                    layout="centered", initial_sidebar_state="collapsed")
+
+
+@st.cache_resource
+def load_assistant_revision(signature):
+    # Streamlit may refresh app.py while retaining imported Python modules.
+    # Reload once per source revision, across sessions, before starting a turn.
+    import intake
+    import pert_assistant
+    importlib.reload(intake)
+    return importlib.reload(pert_assistant)
+
+
+_source_root = Path(__file__).resolve().parent
+_revision = sha256(b"".join((_source_root / name).read_bytes()
+                          for name in ("intake.py", "pert_assistant.py"))).hexdigest()
+_assistant = load_assistant_revision(_revision)
+AssistantError = _assistant.AssistantError
+respond = _assistant.respond
+build_final = _assistant.build_final
+final_message = _assistant.final_message
 
 
 def secret(name: str, default=None):
@@ -60,12 +81,16 @@ client = OpenAI(api_key=api_key, timeout=180, max_retries=1)
 model = secret("PERT_MODEL", "gpt-5.4")
 transcription_model = secret("TRANSCRIPTION_MODEL", "gpt-transcribe")
 audio_seconds_limit = int(secret("MAX_AUDIO_SECONDS", 90))
+st.session_state.setdefault("qa_trace", [])
 st.session_state.setdefault("messages", [])
 st.session_state.setdefault("final", None)
 st.session_state.setdefault("usage", {"input_tokens": 0, "output_tokens": 0, "audio_seconds": 0.0})
 
 with st.sidebar:
     st.header("Mi avance")
+    if st.query_params.get("qa") == "1":
+        import json
+        st.download_button("Diagnóstico de prueba", json.dumps(st.session_state.qa_trace,ensure_ascii=False),file_name="qa_trace.json",mime="application/json")
     if st.button("Empezar otro PERT", use_container_width=True):
         st.session_state.messages = []
         st.session_state.final = None
@@ -164,6 +189,7 @@ try:
         st.markdown(text)
     with st.chat_message("assistant"):
         with st.spinner("Preparando tu siguiente paso..."):
+            _assistant.TRACE.set(st.session_state.qa_trace if st.query_params.get("qa") == "1" else None)
             reply, finalize, usage = respond(client, model, st.session_state.messages,
                                              datetime.now(ZoneInfo("America/Lima")).date().isoformat())
             for key in ("input_tokens", "output_tokens"):

@@ -19,6 +19,10 @@ class IntakeTests(unittest.TestCase):
         p={'ambiguedad_esencial':None,'meta_verificable':True,'hechos':[{'campo':'inicio','valor':'2026-10-01','usuario':0,'cita':'empiezo el 1 de octubre'}]}
         self.assertNotIn('inicio',normalize(p,['Quiero caminar 5 km'])['facts'])
 
+    def test_literal_quote_survives_wrong_message_index(self):
+        p={'ambiguedad_esencial':None,'meta_verificable':True,'hechos':[{'campo':'meta','valor':'Caminar 5 km','usuario':1,'cita':'caminar 5 km'}]}
+        self.assertEqual(normalize(p,['Quiero caminar 5 km'])['facts']['meta'],'Caminar 5 km')
+
     def test_business_reserve_does_not_change_profit(self):
         f={'tipo':'empresa','unidades':'10','precio':'100','costo':'40','empaque':'5','publicidad':'40','reposicion_caja':'40','reposicion_empaque':'5','reposicion_envio':'10'}
         self.assertIn('reposición 455',calculations(f))

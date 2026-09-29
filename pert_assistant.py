@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+from contextvars import ContextVar
 from pathlib import Path
 from typing import Any
 
@@ -10,6 +11,7 @@ from openai import OpenAI
 from pert_core import PlanError, audit_plan, summary
 from intake import SCHEMA as INTAKE_SCHEMA, PROMPT as INTAKE_PROMPT, context, normalize, stage, QUESTIONS, calculations
 
+TRACE = ContextVar("pert_qa_trace", default=None)
 ROOT = Path(__file__).resolve().parent
 
 
@@ -43,7 +45,11 @@ def _user_visible_question_count(reply: str) -> int:
 
 def _create(client: OpenAI, **kwargs: Any):
     # SDK call isolated for test doubles and future model migration.
-    return client.responses.create(**kwargs)
+    result = client.responses.create(**kwargs)
+    trace = TRACE.get()
+    if trace is not None:
+        trace.append({"step":kwargs.get("text",{}).get("format",{}).get("name","plan"),"output":result.output_text})
+    return result
 
 
 def respond(client: OpenAI, model: str, messages: list[dict[str, str]],
@@ -103,7 +109,11 @@ def extract_intake(client,model,messages,today,usage):
                      input=transcript,text={"format":{"type":"json_schema","name":"pert_intake","strict":True,"schema":INTAKE_SCHEMA}},
                      reasoning={"effort":"low"},max_output_tokens=8000,store=False)
         add_usage(usage,resp)
-        try:return normalize(json.loads(resp.output_text),users)
+        try:
+            snapshot=normalize(json.loads(resp.output_text),users)
+            if snapshot['meta_verificable'] and 'meta' not in snapshot['facts']:
+                continue
+            return snapshot
         except (ValueError,KeyError,TypeError):pass
     raise AssistantError('No pude leer este paso completo. Puedes reintentar; tu avance anterior sigue disponible.')
 

@@ -1,6 +1,7 @@
 """Evidence-backed intake and calculations before the next teaching step."""
 import calendar
 import json
+import unicodedata
 from datetime import date, timedelta
 from decimal import Decimal
 
@@ -16,7 +17,9 @@ SCHEMA = {"type":"object","properties":{
 
 PROMPT = '''Extrae datos para un PERT físico, sin redactar respuesta al alumno ni hacer planes.
 Usa SOLO hechos declarados por el usuario o propuestas concretas que este aceptó.
-Cada hecho lleva índice usuario (U0, U1...) y cita literal corta de ese mensaje.
+Cada hecho lleva índice usuario (primer usuario=0) y cita literal CORTA, copiada exactamente, sin normalizar números ni añadir puntos suspensivos.
+Con datos de saldo, ingresos y gastos, situacion ya está respondida: sintetízala.
+Con inventario actual, interesados y ventas pagadas, situacion ya está respondida.
 No conviertas su silencio o una solicitud de continuar en aceptación de fechas inventadas.
 No inventes fechas, habilidades, apoyos, medidas ni cifras. Reutiliza todos los datos adelantados.
 Fechas inicio/fin: ISO con año. Importes: número sin moneda ni separadores de miles.
@@ -57,8 +60,15 @@ def normalize(payload, users):
     facts={}
     for h in payload['hechos']:
         i=h['usuario'];q=h['cita']
-        if 0 <= i < len(users) and q and q in users[i]:
+        # Source text is authoritative; a mistaken message index must not
+        # erase a fact when its literal quotation exists in the transcript.
+        clean=lambda text: ' '.join(unicodedata.normalize('NFKC',text).split())
+        if q and any(clean(q) in clean(user) for user in users):
             facts[h['campo']]=h['valor']
+    if 'situacion' not in facts and facts.get('tipo')=='ahorro' and all(k in facts for k in ['saldo','ingreso','gasto']):
+        facts['situacion']=f"Saldo libre {facts['saldo']}; ingreso mensual {facts['ingreso']}; gasto mensual {facts['gasto']}."
+    if facts.get('obstaculos','').strip().lower() in ['ninguno','ningún obstáculo','no tengo obstáculos']:
+        facts.setdefault('principal','ninguno')
     return {**payload,'facts':facts}
 
 
