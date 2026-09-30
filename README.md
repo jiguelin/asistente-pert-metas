@@ -1,12 +1,12 @@
 # Asistente PERT Chart de Metas — app para el taller
 
-**Estado:** los cuatro casos de prueba anteriores produjeron planes y PDF válidos, pero un caso real de salud quedó bloqueado durante más de cinco minutos al preparar tareas. La aplicación no está certificada para el evento. Las 61 pruebas locales pasan; los 30 primeros mensajes simultáneos ya probados no equivalen a 30 cierres completos.
+**Estado:** los cuatro casos de prueba anteriores produjeron planes y PDF válidos, pero un caso real de salud quedó bloqueado durante más de cinco minutos al preparar tareas. La aplicación no está certificada para el evento. Las 76 pruebas locales pasan; los 30 primeros mensajes simultáneos ya probados no equivalen a 30 cierres completos.
 
 ## Corrección de latencia (septiembre de 2026)
 
 Los pasos conversacionales usan las reglas esenciales sin adjuntar la guía de montaje completa. Si faltan los días disponibles, se pregunta ese dato antes de generar tareas. Las recurrencias se proponen compactas, sin enumerar cientos de fechas. Cada turno de conversación tiene un presupuesto total de 90 segundos, como máximo tres borradores y ninguna repetición automática del SDK; al agotarlo, se cierra la lectura del flujo y se conserva el mensaje pendiente. El alumno ve la etapa actual, sin recibir borradores sin validar.
 
-El cierre físico mantiene la guía y los controles completos. Su tiempo y capacidad simultánea todavía deben medirse; estos límites conversacionales no constituyen una garantía de 90 segundos para el PDF final. Las pruebas locales verifican cancelación, conservación de contexto, preguntas faltantes y límites de intentos con respuestas simuladas. La regresión con IA real debe registrarse por separado.
+El cierre físico mantiene la guía y los controles completos. Python expande reglas recurrentes exactas y el revisor semántico recibe esas reglas junto con cantidades calculadas; el plan y PDF conservan cada sesión real. El cierre tiene un presupuesto de espera de 120 segundos y tres borradores como máximo. Si una revisión se interrumpe, el reintento reutiliza el borrador terminado en la misma sesión. Cambiar historia, modelo o hechos descarta ese borrador; cerrar la sesión también lo pierde. Estos límites acotan la espera, pero no garantizan una respuesta válida antes de ellos ni certifican 30 cierres simultáneos. Las pruebas locales verifican cancelación, conservación de contexto, preguntas faltantes y límites de intentos con respuestas simuladas. La regresión con IA real debe registrarse por separado.
 
 ## Corrección de aclaraciones (septiembre de 2026)
 
@@ -45,7 +45,7 @@ python -m streamlit run app.py
 
 ## Controles de calidad y límites conocidos
 
-El motor comprueba días inclusivos, continuidad de periodos, sesiones, carga por día/semana, dependencias, flujo/reserva financiera y posiciones geométricas. El modelo debe revisar sentido y evidencia. Si el modelo no genera un plan que supere la validación en cinco intentos, la app conserva el borrador y bloquea el PDF definitivo. Un segundo control interno revisa los borradores antes de mostrarlos, incluyendo criterio, calendario, tareas y coherencia semántica. Las pruebas con API real siguen siendo necesarias.
+El motor comprueba días inclusivos, continuidad de periodos, sesiones, carga por día/semana, dependencias, flujo/reserva financiera y posiciones geométricas. El modelo debe revisar sentido y evidencia. Si el modelo no genera un plan que supere la validación en tres intentos o agota el tiempo de espera, la app conserva el mensaje y el punto de reparación en la sesión, y bloquea el PDF definitivo. Un segundo control interno revisa los borradores antes de mostrarlos, incluyendo criterio, calendario, tareas y coherencia semántica. Las pruebas con API real siguen siendo necesarias.
 
 El archivo de avance debe descargarse antes de cerrar la página. No hay cuentas ni recuperación automática. La app no envía correo ni WhatsApp automáticamente: el alumno descarga el PDF y lo adjunta desde su teléfono. No hay versión BYOK en este paquete; tendría que usar otro despliegue sin la clave del organizador.
 

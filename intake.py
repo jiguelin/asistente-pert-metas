@@ -32,7 +32,14 @@ saldo=dinero inicial libre en ahorro; capital=dinero disponible inicial de una e
 (no llamarlo libre si no está separado de obligaciones). ingreso/gasto=mensuales; reserva=dinero final intocable;
 minutos_semana: JSON [lunes,martes,miércoles,jueves,viernes,sábado,domingo] de MINUTOS
 confirmados; días no disponibles=0. Solo si los días están declarados; no inventar reparto
-de un total semanal. minutos_cobro: minutos disponibles el día del cobro si explícitos.
+de un total semanal. Integra datos repartidos entre respuestas: si primero declara
+duraciones y después los días, conserva ambas cosas y devuelve minutos_semana.
+Si declara un intervalo de duración (45 minutos a una hora; media hora a 45), usa
+el extremo inferior expresado para capacidad conservadora: 45+30=75 minutos.
+Esto no cambia sus horarios ni exige usar todo el bloque. «Todos los días» confirma
+lunes a domingo. disponibilidad debe resumir días Y duraciones ya declarados,
+nunca sustituir un horario completo por la última respuesta que solo aporta días.
+minutos_cobro: minutos disponibles el día del cobro si explícitos.
 excepciones_tiempo: objeto JSON fecha ISO:minutos, solo excepciones declaradas;
 0 si no puede trabajar ese día. No inventar excepciones ni omitirlas si fueron aportadas.
 objetivo=umbral libre; empresa: unidades,precio,costo unitario,empaque unitario,

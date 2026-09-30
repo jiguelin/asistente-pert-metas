@@ -5,6 +5,7 @@ import json
 import time
 import re
 import threading
+from hashlib import sha256
 from contextvars import ContextVar
 from pathlib import Path
 from typing import Any
@@ -14,12 +15,15 @@ from openai import OpenAI
 from pert_core import PlanError, audit_plan, audit_with_scale, summary
 from intake import SCHEMA as INTAKE_SCHEMA, PROMPT as INTAKE_PROMPT, context, normalize, stage, QUESTIONS, calculations, cash_schedule
 from contingencies import capacity_schedule, compile_replacement
+from calendar_compiler import compile_calendar, semantic_calendar_view
 
 TRACE = ContextVar("pert_qa_trace", default=None)
 PROGRESS = ContextVar("pert_progress", default=None)
 TURN_DEADLINE = ContextVar("pert_turn_deadline", default=None)
 TURN_SECONDS = 90
 TURN_ATTEMPTS = 3
+FINAL_SECONDS = 120
+FINAL_WORK = ContextVar("pert_final_work", default=None)
 ROOT = Path(__file__).resolve().parent
 
 
@@ -247,6 +251,7 @@ def review(client,model,messages,candidate,math_facts,phase,usage):
       'No vuelvas a restar una reserva ya descontada en un saldo libre intermedio. '
       'Revisar gastos de un mes ya pagado no equivale a restarlos otra vez; rechaza solo si realmente recalcula o exige ese gasto adicional. '
       'En tareas acepta recurrencias compactas con rango exacto, días/excepciones confirmados, minutos por sesión, cantidad y carga total. No exigir cientos de fechas enumeradas: se expanden y validan en final. Rechaza días o disponibilidad inventados y tareas duplicadas. '
+      'En final puede recibir reglas compactas y un resumen de sesiones calculado por Python en vez de cientos de fechas. El código ya expandió cada fecha y validó capacidad y dependencias; conserva la revisión del significado, completitud, frecuencia aprobada y evidencia. No exigir enumeración redundante ni recalcular totales validados. '
       'En español usa fechas ISO o día/mes/año. Nunca mes/día: 10/04 no puede representar el 4 de octubre. '
       'En final verifica coherencia semántica de TODO el plan: inventario aprobado completo, evidencia autónoma, '
       'reserva y gastos ya pagados, insumos previos, todas las sesiones y cada conexión causal/apoyo necesaria. '
@@ -275,8 +280,18 @@ def review(client,model,messages,candidate,math_facts,phase,usage):
 
 PLAN_PROMPT = """Produce SOLO un objeto JSON con el esquema exacto de MOTOR_PERT.py:
 inicio, fin ISO; periodos [{inicio,fin}] cobertura completa; notas con id,tipo,texto,inicio,fin,evidencia
-(tipos M,T,H,O,A,MP, una sola MP); sesiones [{id,fecha,minutos}] por CADA ejecución
-de cada tarea incluso recurrentes; capacidad {fecha:minutos} por fecha usada;
+(tipos M,T,H,O,A,MP, una sola MP); sesiones [{id,fecha,minutos}] para ejecuciones
+puntuales. Para tareas recurrentes usa recurrencias [{id,inicio,fin,dias,minutos,
+excluir,excepciones}]: dias=[0..6], lunes=0, domingo=6; minutos por ejecución;
+excluir son fechas sin ejecución; excepciones es objeto fecha:minutos que cambia
+una ejecución del patrón (0 la omite). Usa reglas disjuntas si cambia la duración.
+No repitas en sesiones ninguna ejecución ya cubierta por recurrencias. La
+aplicación expande y comprueba CADA fecha real; conserva todas las ejecuciones.
+No uses recurrencias para tareas condicionales. Dos bloques diarios de la misma
+tarea pueden representarse por una ejecución con su suma aprobada de minutos,
+conservando ambos bloques en frecuencia y detalle. No duplicar la nota física.
+capacidad {fecha:minutos} por fecha usada; si hay minutos_semana confirmado,
+capacidad={} porque la aplicación construye todas las fechas desde ese patrón;
 limite_semanal (número o null); dependencias [[previo,siguiente]] para fin global
 antes del comienzo; dependencias_sesion [[previo,siguiente]] para orden en cada
 fecha recurrente; dependencias_evento [[previo,fecha,posterior,fecha]];
@@ -313,26 +328,44 @@ fingir un plan completo. Solo un JSON, sin marcas Markdown.
 
 def build_final(client: OpenAI, model: str, messages: list[dict[str, str]],
                 today_lima: str, ready_snapshot=None) -> tuple[dict | None, list[str], dict]:
+    token=TURN_DEADLINE.set(time.monotonic()+FINAL_SECONDS)
+    try:
+        return _build_final(client,model,messages,today_lima,ready_snapshot)
+    finally:
+        TURN_DEADLINE.reset(token)
+
+
+def _build_final(client,model,messages,today_lima,ready_snapshot=None):
     """Ask for a full machine-readable plan; retry only to repair internal errors."""
-    extra = ""
     usage = {"input_tokens": 0, "output_tokens": 0}
     snapshot=ready_snapshot or extract_intake(client,model,messages,today_lima,usage)
     if stage(snapshot)!='final':return None,[QUESTIONS.get(stage(snapshot),'aceptación del cronograma completo')],usage
-    math_facts=calculations(snapshot['facts'])
-    for _ in range(5):
+    state=FINAL_WORK.get()
+    if state is None:state={}
+    fingerprint=sha256(json.dumps([model,messages,snapshot['facts']],ensure_ascii=False,sort_keys=True).encode()).hexdigest()
+    if state.get('fingerprint')!=fingerprint:
+        state.clear();state['fingerprint']=fingerprint
+    extra=state.get('repair','')
+    math_facts=calculations(snapshot['facts'],include_calendar=False)
+    for _ in range(TURN_ATTEMPTS):
+        _remaining()
         _progress('Preparando el inventario completo del PERT…' if not extra else 'Corrigiendo el plan después de comprobarlo…')
-        resp = _create(client, model=model, instructions=_instructions() + "\n" + PLAN_PROMPT
-                       + f"\nHoy en Lima: {today_lima}.\n" + math_facts
-                       + '\nHechos acreditados: '+json.dumps(snapshot['facts'],ensure_ascii=False)+'\n'+extra,
-                       input=messages + [{"role":"user","content":"Genera exclusivamente el objeto JSON completo del plan aprobado, sin texto conversacional."}],
-                       text={"format": {"type": "json_object"}},
-                       reasoning={"effort":"medium"},max_output_tokens=32000, store=False)
-        usage["input_tokens"] += resp.usage.input_tokens
-        usage["output_tokens"] += resp.usage.output_tokens
+        raw=state.get('draft')
+        if raw is None:
+            resp = _create(client, model=model, instructions=_instructions() + "\n" + PLAN_PROMPT
+                           + f"\nHoy en Lima: {today_lima}.\n" + math_facts
+                           + '\nHechos acreditados: '+json.dumps(snapshot['facts'],ensure_ascii=False)+'\n'+extra,
+                           input=messages + [{"role":"user","content":"Genera exclusivamente el objeto JSON completo del plan aprobado, sin texto conversacional."}],
+                           text={"format": {"type": "json_object"}},
+                           reasoning={"effort":"medium"},max_output_tokens=16000, store=False)
+            add_usage(usage,resp)
+            raw=resp.output_text
+            state['draft']=raw
         try:
-            plan = json.loads(resp.output_text)
+            plan = json.loads(raw)
             if set(plan) == {"pendientes"} and plan["pendientes"]:
                 return None, [str(x) for x in plan["pendientes"]], usage
+            compile_calendar(plan)
             plan['contexto']={'situacion_actual':snapshot['facts'].get('situacion',''),
                               'obstaculo_principal':snapshot['facts'].get('principal','')}
             currencies=set(re.findall(r'S/|US\$|\$|€|£|\b(?:PEN|USD|EUR|GBP)\b', '\n'.join(m['content'] for m in messages if m['role']=='user')))
@@ -377,7 +410,7 @@ def build_final(client: OpenAI, model: str, messages: list[dict[str, str]],
                 raise PlanError(['Ancho de pared diferente al confirmado'])
             if audit['motor']['papelografos'] > int(snapshot['facts']['papeles']):
                 raise PlanError(['El montaje necesita más papelógrafos que los disponibles; no eliminar notas para hacer que quepa'])
-            semantic_candidate={'contenido':plan,'montaje_validado_por_la_aplicacion':{
+            semantic_candidate={'contenido':semantic_calendar_view(plan,facts),'montaje_validado_por_la_aplicacion':{
                 'papelografos_usados':audit['motor']['papelografos'],
                 'papelografos_disponibles':int(snapshot['facts']['papeles']),
                 'columnas':audit['columnas'],'zona_mp':audit['zona_mp'],
@@ -385,12 +418,15 @@ def build_final(client: OpenAI, model: str, messages: list[dict[str, str]],
             _progress('Revisando el plan completo y sus conexiones…')
             verdict=review(client,model,messages,json.dumps(semantic_candidate,ensure_ascii=False),math_facts,'final',usage)
             if not verdict['ok']:raise PlanError(verdict['problems'])
+            state.clear()
             return audit, [], usage
         except (ValueError, KeyError, TypeError) as exc:
             problems = exc.problems if isinstance(exc, PlanError) else [str(exc)]
             extra = ("ERROR DEL BORRADOR ANTERIOR (corrígelo con los datos reales, "
                      "sin borrar trabajos ni cambiar el criterio de la meta): "
-                     + "; ".join(problems[:15])+'\nBORRADOR A REPARAR:\n'+resp.output_text)
+                     + "; ".join(problems[:15])+'\nBORRADOR A REPARAR:\n'+raw)
+            state['repair']=extra
+            state.pop('draft',None)
     return None, ["No se pudo completar la verificación interna del montaje"], usage
 
 
