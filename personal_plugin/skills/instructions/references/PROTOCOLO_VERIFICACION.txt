@@ -1,0 +1,137 @@
+PROTOCOLO LOCAL — COMPLEMENTO PERSONAL 0.4.0
+
+1. Uso
+Ejecutar scripts/pert_cli.py desde esta habilidad, nunca desde una ruta de otra sesión.
+No exigir ejecución para el primer turno sin meta. Para fechas, recursos, carga y salida
+final, usar las herramientas de ejecución realmente disponibles. El alumno solo recibe
+la pregunta o resultado útil; no necesita crear JSON, instalar paquetes ni revisar código.
+Los controles semánticos son responsabilidad del agente; el código controla cálculo,
+fidelidad de fechas/medidas, cargas, caja regular, contingencias y montaje.
+
+2. Estado de entrevista
+Mantener internamente un objeto:
+{
+  "estado": {
+    "meta_verificable": true,
+    "ambiguedad_esencial": null,
+    "facts": {"meta": "Caminar 5 km con buena energía"}
+  },
+  "messages": [{"role": "user", "content": "Quiero caminar 5 km con buena energía."}]
+}
+Los facts son SOLO datos declarados o propuestas concretas aceptadas. Conservar
+mensajes para contrastar el significado. No marcar aprobación por silencio, por una
+petición de continuar o por aceptar una propuesta sin fechas/frecuencia/minutos.
+Valores de facts: cadenas. Fechas ISO, importes sin separadores de miles; listas y
+objetos se almacenan como texto JSON. Un hecho nuevo invalida solo aprobaciones
+afectadas; reutilizar lo que sigue siendo válido.
+
+Campos de entrevista: meta, criterio, inicio, fin, situacion, obstaculos, principal,
+habilidades, apoyos, disponibilidad, mini_aprobadas, tareas_aprobadas, papel, nota,
+meta_nota, papeles, pared. Las aprobaciones son "true" solo tras aceptación explícita.
+papel/nota/meta_nota: "[ancho,alto]" en cm; papeles/pared: número como cadena.
+Si principal no existe y hay varios obstáculos, preguntar por uno; no inferirlo.
+Ningún apoyo u obstáculo es una respuesta válida.
+
+Disponibilidad: minutos_semana = texto JSON con siete valores
+[lunes,martes,miércoles,jueves,viernes,sábado,domingo]. Días no disponibles =0.
+Si una propuesta concreta de fechas/minutos fue aceptada, estado.capacidad_confirmada
+puede contener {fecha ISO:minutos numéricos}, como alternativa al patrón semanal.
+No declarar confirmado un calendario todavía propuesto. No inventar reparto de un
+total semanal. excepciones_tiempo = texto JSON
+{"YYYY-MM-DD":minutos}, solo excepciones confirmadas. minutos_cobro = tiempo
+declarado el día del cobro; cobro_fin_mes ="true" solo si se cobra al cierre del mes.
+
+Ahorro: tipo="ahorro"; saldo inicial libre, ingreso/gasto mensual, reserva final,
+objetivo, gastos_inicio_pagados y cobro_fin_mes ("true"/"false" si se conocen).
+Para flujo irregular, estado.caja_confirmada contiene filas numéricas
+[{fecha,saldo,reserva,libre}], reconstruidas de datos/propuestas aceptadas y revisadas
+contra ingresos, pagos y reservas reales. No basta copiar una caja inventada.
+Empresa: tipo="empresa"; unidades, precio y costo unitarios, empaque unitario,
+publicidad total, capital disponible, objetivo de ganancia, reposicion total o
+reposicion_caja/reposicion_empaque/reposicion_envio. inventario_disponible="true"
+solo si ya posee las unidades; otros_costos="0" solo si afirma que no hay otros;
+primer_envio_cliente="true" solo si el comprador lo paga. Si hay más costos o
+inventario pendiente de compra, conservar el flujo completo: no aplicar el caso
+simplificado ni inventar hechos para activarlo. En metas no financieras: tipo="otro".
+Logística confirmada: entrega_habiles, reposicion_habiles (números como cadena),
+entrega_lun_vie y recogida_sabados ("true"/"false"). No asumir horarios ni festivos.
+
+Consultar siguiente etapa y cálculos:
+python scripts/pert_cli.py paso estado.json
+La pregunta devuelta es orientación interna. En mini/tareas el agente propone el
+conjunto y solicita una aceptación. No repetir datos conocidos. La ambigüedad
+esencial refleja una condición indispensable aún sin criterio; no incluye energía,
+ánimo o felicidad junto a resultado observable. Conserva internamente la meta/criterio
+ya verificados; reabre solo ante cambio esencial real del último alumno. Si retoma,
+reconstruye esta decisión desde los mensajes y revisa el archivo, no confíes en un
+indicador guardado. No interrogar sinónimos. Tras una aclaración esencial insuficiente,
+proponer comprobación concreta y pedir una aceptación, sin aprobarla automáticamente.
+
+3. Plan completo
+Añadir al objeto estado.json el campo plan con:
+inicio, fin: ISO; periodos:[{inicio,fin}] cobertura única completa;
+notas:[{id,tipo,texto,inicio,fin,evidencia,detalle,criterio?,frecuencia?}];
+tipo es M,T,H,O,A o MP; una sola MP. Pequeñas: ID y2–4 palabras.
+sesiones:[{id,fecha,minutos}] por CADA ejecución, incluidas revisiones y preparación;
+capacidad:{fecha:minutos}; limite_semanal:número o null;
+dependencias:[[previo,siguiente]]: fin global antes del comienzo;
+dependencias_sesion:[[previo,siguiente]]: orden dentro de cada fecha recurrente;
+dependencias_evento:[[previo,fecha,posterior,fecha]]: lotes/etapas concretos;
+conexiones:[[origen,destino,tipo]]: contribucion, apoyo, riesgo, continuidad;
+finanzas:boolean; caja:[{fecha,saldo,reserva,libre}] cuando corresponde;
+materiales:{papel:[ancho,alto],nota:[ancho,alto],meta:[ancho,alto],pared:número};
+pendientes:[] únicamente si lo esencial está resuelto.
+O principal lleva principal:true; exactamente uno si fue declarado.
+Conservar IDs y todos los minutos aceptados; consolidaciones explica los IDs unidos.
+
+Una reposición opcional: una T con workflow:"reposicion" y activador:ID de la
+tarea que confirma entregas y detecta daños. El adaptador construye rutas reales
+para10min pedido+5 revisión+15 reempaque/reenvío+10 comprobación, como máximo
+una incidencia. Este procedimiento debe estar propuesto y aceptado; si requiere
+otro reparto, varias incidencias u otra logística, no forzar ese caso: definir y
+auditar sus rutas completas. Las alternativas no son ejecuciones obligatorias.
+Una dependencia desde una tarea condicional significa requisito solo si se activa.
+
+4. Revisión semántica interna
+Revisar todo el plan contra los mensajes y las propuestas aprobadas en una pasada
+distinta del diseño. Corregir antes de entregar; no mostrar los borradores rechazados.
+Añadir revision_semantica con los ocho controles en true SOLO tras comprobar:
+meta_fiel: propósito, umbral, moneda y criterios sin cambios;
+hitos_resultados: cada M es resultado verificable y fecha real;
+evidencias_aprobadas: sin pruebas extra de energía, «sin leer», etc.;
+tareas_sin_duplicados: acciones/métodos/recursos consolidados sin perder sesiones;
+insumos_y_flechas: todos los consumidores, apoyos y eventos tienen conexión real;
+costos_y_recursos: todos los costos, reservas, liquidez y contingencias cubiertos;
+disponibilidad_fiel: patrón y excepciones, sin ampliar tiempo ni omitir tareas;
+sin_pendientes_esenciales: no queda requisito indispensable desconocido.
+Estos campos no reemplazan la revisión: evitan certificar un plan sin realizarla.
+
+5. Verificación y entrega
+python scripts/pert_cli.py validar estado.json
+Salida JSON ok:false bloquea el montaje. Corregir internamente los errores con
+los hechos reales, sin quitar notas/sesiones ni cambiar medidas o metas para pasar.
+Si falta un dato indispensable, preguntar solo uno. Si se cambia plan, revalidar.
+Con ok:true, generar archivos desde la misma auditoría:
+python scripts/pert_cli.py exportar estado.json --pdf resultado.pdf --json resultado.json
+Este comando vuelve a verificar. Los destinos deben ser rutas de trabajo escribibles.
+Mostrar enlaces de descarga reales. El JSON conserva estado y plan para retomarlo;
+antes de continuar un archivo importado, leerlo y revalidar, no confiar en ok guardado.
+PDF requiere ReportLab; no requiere OpenAI ni Streamlit. Si falta una dependencia,
+usar las capacidades autorizadas del entorno para resolverlo; si es imposible,
+explicar la limitación real sin prometer un PDF inexistente.
+
+6. Densidad y salida
+La auditoría devuelve periodos/columnas reales, posiciones, inventario, flechas,
+zonaMP fuera de columnas y densidad. Copiar esos resultados, no recalcular de memoria.
+Si no cabe, audit_with_scale prueba meses naturales, conservando notas y sesiones.
+Como máximo3 columnas por papel y no más papeles/pared que los confirmados.
+El PDF incluye todos los IDs, contextos, fechas, esfuerzos, leyendas y conexiones.
+Tiempos condicionales se separan del trabajo base; no son tiempo de montaje.
+
+7. Límites del entorno
+El complemento es privado y usa el modelo/herramientas del chat donde se invoca.
+Comparte metodología y cálculo con la app; no contiene su interfaz Streamlit,
+autenticación ni un servicio que lance una segunda llamada de revisión a la API.
+El agente realiza esa revisión interna y debe ejecutar el verificador antes de cerrar.
+Si una superficie no permite ejecutar archivos, no afirmar equivalencia de montaje
+validado allí: mantener borrador y explicar brevemente el bloqueo real.

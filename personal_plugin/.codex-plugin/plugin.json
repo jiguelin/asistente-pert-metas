@@ -1,0 +1,27 @@
+{
+  "interface": {
+    "capabilities": [
+      "skills"
+    ],
+    "category": "Productivity",
+    "composerIcon": "./assets/gpt-icon.png",
+    "defaultPrompt": [
+      "Quiero construir mi PERT Chart desde mi Meta Principal",
+      "Ayúdame a construir mi PERT Chart físico paso a paso",
+      "Quiero revisar y mejorar el PERT Chart que ya empecé"
+    ],
+    "developerName": "CARLO SILVA SANTISTEBAN",
+    "displayName": "Asistente PERT CHART de Metas",
+    "logo": "./assets/gpt-icon.png",
+    "longDescription": "Guía paso a paso para convertir una Meta Principal en un PERT Chart accionable.",
+    "shortDescription": "Tu meta en un PERT físico"
+  },
+  "name": "gpt-045888b7322007bc6c61ee27c46aa1eb",
+  "version": "0.4.0",
+  "description": "Guía paso a paso para convertir una Meta Principal en un PERT Chart accionable.",
+  "author": {
+    "name": "CARLO SILVA SANTISTEBAN"
+  },
+  "keywords": [],
+  "skills": "./skills"
+}

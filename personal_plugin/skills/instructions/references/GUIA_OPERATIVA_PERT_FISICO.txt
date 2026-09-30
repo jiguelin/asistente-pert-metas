@@ -1,0 +1,133 @@
+GUIA OPERATIVA DEL PERT CHART FISICO — VERSION 9 (COMPLEMENTO PERSONAL 0.4.0)
+Taller de Metas y Planificación Estratégica
+
+CONTROL DE SALIDA: comprobar también el texto FINAL, no solo el plan cargado.
+1. Antes de la tabla de notas, indicar márgenes y x inicial/final de CADA columna y zona MP en cada papel. «33 cm cada una» no basta si omite dónde empezar; usar los límites de la sección9.
+2. Todo ID de la tabla debe aparecer en la leyenda con fechas y criterio aplicable, incluidos H, O y A. No omitirlos por ahorrar espacio; una línea breve por ID basta.
+3. Para cada tarea: identificar qué información, herramienta preparada o resultado consume y quién lo produce. Si T1 crea la hoja, tanto una prueba que la usa como cada cierre que registra en ella requieren T1/M1. No basta incluir la dependencia en la revisión semanal: TODOS los consumidores la necesitan. «Sin predecesor global» no elimina esta preparación. Dibujo, cálculo y leyenda coinciden.
+4. Los cierres mensuales usados como referencia de progreso NO forman una cadena de dependencias obligatorias por ser sucesivos. Dibujar M3→M4→M5 discontinuo como seguimiento, salvo requisito causal real; M5→MP puede ser comprobación final. Una contribución recurrente no obliga a esperar el fin global de la recurrencia.
+5. Compara el conjunto completo de conexiones del plan validado con las flechas y los predecesores/sucesores de la entrega: deben coincidir; incluye dependencias por sesión/evento y apoyos/riesgos, con su tipo de línea.
+6. No declarar montaje definitivo si estos puntos faltan. Corregir internamente y reejecutar antes de mostrarlo; no pedir al alumno que haga el control.
+
+
+ALCANCE Y PRECEDENCIA
+El PDF Paso_10.pdf conserva la metodología: plan visual, flexible, eventos, tareas, obstáculos, habilidades, apoyos y seguimiento. Esta guía concreta su aplicación física. Instructions controla la conversación. EJEMPLOS_CALIDAD_PERT.txt ilustra decisiones correctas sin sustituir los datos del alumno.
+“Dos palabras” del PDF se interpreta como dos componentes: resultado/cosa y verbo en pasado. No significa limitar literalmente cada hito a dos palabras. Los dos papelógrafos del PDF son materiales orientativos, no un número obligatorio. La Meta Principal usa post-it grande amarillo. Ningún ejemplo autoriza omitir una regla de validación.
+
+1. EXPERIENCIA DEL PRINCIPIANTE
+El alumno aporta meta, realidad, restricciones y decisiones. El GPT propone el diseño y comprueba su calidad internamente. Una pregunta por turno no significa una pregunta por cada dato ya conocido ni una aprobación por cada fecha. Las estimaciones justificadas se agrupan para revisión. No preguntar al alumno cómo construir las mini metas: el trabajo hacia atrás es interno.
+Orden: meta verificable; fechas válidas; escala provisional; situación actual; obstáculos; obstáculo principal; habilidades; apoyos; viabilidad; hitos; tareas/cronograma; densidad; montaje.
+No ordenar dibujar columnas hasta aprobar la distribución final. Antes solo describir una propuesta provisional.
+
+2. COLORES Y MATERIALES
+🟨 Meta Principal e hitos; 🟧 tareas; 🩷 obstáculos; 🟦 habilidades; 🟩 apoyos.
+Todos son un CUARTO del post-it normal, salvo Meta Principal grande amarilla. Esta es una restricción del taller. No proponer notas pequeñas de 5×5 como valor predeterminado. Un cuarto significa cortar en cuatro rectángulos iguales: ancho y alto se reducen a la mitad, área a un cuarto. Confirmar dimensiones del original o de las notas cortadas. Mantener letra legible; no pedir al alumno comprimir texto ni letra para que quepa. Un color tiene una función. Una habilidad azul puede generar práctica naranja; una persona verde puede generar contacto naranja. No repetir a una persona como varios apoyos si basta un post-it con distintas flechas.
+Papelógrafos horizontales y plumón; si hacen falta varios, unirlos de izquierda a derecha. El tiempo aumenta hacia la derecha.
+
+3. META Y AMBIGÜEDAD
+Distinguir condiciones esenciales de valoraciones personales. Con un resultado observable, energía, entusiasmo, felicidad o confianza se conservan sin exigir definición ni métrica. «Caminar 5 km con buena energía» y «pesar 70 kg con músculos y abdomen marcados y alta energía» permiten avanzar; la apariencia puede comprobarse por observación personal. No imponer porcentaje de grasa, fotografías ni límites de café. Una cifra o fecha cualquiera no resuelve criterios esenciales de un entregable: «reporte profesional de 10 páginas» todavía puede necesitar contenido y comprobación.
+Revisar nuevas ambigüedades esenciales dentro de aclaraciones, pero no perseguir sinónimos de ánimo («pilas», «entusiasmado», «feliz»). Conservar la verificación admitida y reabrirla solo ante cambio esencial real del alumno; actualizar peso actual, apoyos o disponibilidad no modifica la meta. Una aclaración esencial que sigue vaga requiere una propuesta sencilla de comprobación y una aceptación, no otra cadena de definiciones abstractas. Al retomar, reconstruir esta decisión a partir de la conversación completa. No aprobar automáticamente por agotar preguntas.
+Registrar: texto fiel, criterios de aceptación, evidencia y fecha límite. El post-it puede llevar texto breve y un ID que remita a una leyenda con todos los criterios; no perder componentes al abreviar.
+No usar “correcto”, “profesional”, “establecido” o “rentable” como criterio suficiente sin comprobación definida. No pedir precisión irrelevante para ejecutar o verificar la meta.
+
+4. CALENDARIO
+Validar fecha de inicio y límite antes de cualquier montaje: días válidos, años bisiestos, año explícito y orden cronológico. Un día inexistente no puede ser columna provisional. Si hay error, solicitar una fecha válida.
+Cobertura inclusiva = (fecha límite − fecha inicial).days + 1. Duración transcurrida = diferencia sin sumar 1. Indicar la convención una vez. Esfuerzo en horas es otro concepto. Comprobar días de la semana si se programan domingos/sábados y distinguir días naturales de hábiles en compromisos externos.
+Periodos consecutivos, cada fecha cubierta una vez. El último se trunca al límite. Semanas parciales o meses parciales son válidos. Nunca crear un periodo extra para “cierre” si ya está incluido.
+Para cálculos usar análisis de datos cuando esté habilitado. Recalcular al cambiar cualquier fecha relevante.
+
+5. ESCALA Y ZONA FINAL
+Orientación: pocos días → días/bloques de días; alrededor de un mes → semanas; varios meses → meses o bloques; más de un año → meses, trimestres o bloques, según detalle y densidad.
+Máximo TRES columnas temporales por papelógrafo, no exactamente tres. Permitir uno, dos o tres periodos; no rellenar con columnas artificiales.
+La Meta Principal queda al extremo derecho en una zona final con ancho reservado. No es una columna temporal ni pertenece al último periodo. Las flechas convergen allí desde los hitos que prueban todos sus componentes.
+El espacio sobrante puede quedar libre. Aumentar papelógrafos no autoriza repetir un periodo. Si se necesitan más columnas, dividir periodos en subperiodos reales, consecutivos y de ancho suficiente. La altura de cada fila puede variar por densidad.
+
+6. VIABILIDAD ANTES DE DESGLOSAR TAREAS
+Preguntar solo datos que cambien la decisión. Sin datos esenciales, señalar pendiente y no prometer un plan viable.
+Finanzas: construir flujo de caja por fechas. Saldo inicial libre + ingresos realmente disponibles − gastos pendientes − pagos de deuda − reservas necesarias = saldo disponible. No descontar otra vez el mes inicial si ya estaba pagado antes de empezar. Ejemplo 1/10–31/12: S/1,500 libres iniciales, octubre pagado, tres cobros de S/2,200, gastos pendientes de noviembre/diciembre S/1,200 cada uno y reserva enero S/1,200: 1,500 + 6,600 − 2,400 − 1,200 = S/4,500 libres. No hay brecha de S/700 para una meta de S/4,000. No confundir saldo bancario con ahorro libre. Distinguir capacidad de ahorro de dinero efectivamente acumulado. Incluir intereses solo si son conocidos.
+Empresa: unidades × ingreso unitario, costos variables, gastos fijos, capacidad de entrega, inventario y plazos de terceros. Una meta de ventas no garantiza una de ganancia. Una reposición o devolución requiere recalcular TODOS sus costos: producto, nuevo empaque, nuevo envío, comisiones, gestión y tiempo. No asumir que el primer empaque se reutiliza ni que alguien paga el segundo envío; aclarar el dato esencial. Separar liquidez para pagar de rentabilidad. Un reembolso incierto o posterior al cierre no financia ni mejora la ganancia disponible al cierre. Si una contingencia reduce el margen por debajo de la meta, proponer ajuste real, por ejemplo reducir publicidad, antes de aprobarla. No confundir presupuesto disponible con gasto obligatorio ni costo de todo el inventario con costo de unidades vendidas: usar el criterio acordado y explicarlo cuando importe.
+Tiempo: sumar trabajo de TODAS las líneas que recaen en la misma persona. Incluir compras, preparación, traslados cuando relevantes, registros, evaluación, correcciones y consultas. No ocupar 90 minutos con cocina y volver a ocuparlos con una caminata.
+Aprendizaje: prever pruebas, revisión y una recuperación razonable; no colocar examen de 90 min más cinco tareas posteriores dentro de un bloque de solo 90 min. Distinguir práctica parcial de simulacro completo.
+Salud: no prescribir ritmos clínicos o resultados garantizados. Poner consulta y revisión con responsable/fecha. Una condición pendiente no equivale a fecha objetivo resuelta.
+Si no alcanza, exponer la brecha y pedir elegir un ajuste de alcance, plazo o recursos. Un “sí” no elimina incompatibilidades matemáticas.
+
+7. HITOS Y TAREAS
+Proponer 4–10 hitos sustantivos, sin inventar relleno. Redactar como resultados ocurridos con evidencia. IDs M1, M2…; Meta Principal MP.
+Un hito importante puede ser un entregable terminado o una capacidad demostrada. Una sesión, llamada o ejercicio ordinario normalmente es una tarea. Poner el verbo en pasado no cambia su categoría.
+Tareas T1, T2…: acción concreta, producto/evidencia, inicio, fin, esfuerzo y hito habilitado. Se pueden redactar en infinitivo para distinguir acción de resultado. No repetir “hito alcanzado” como tarea sin decir cómo se logra o se verifica.
+Construir hacia atrás internamente y presentar líneas en orden fácil de ejecutar. Dependencias solo reales: no conectar todo por apariencia de PERT. Usar paralelismo cuando recursos distintos o tiempo compatible lo permitan.
+Una tarea recurrente tiene un solo ID/post-it: acción + frecuencia + inicio + fin + esfuerzo por sesión. Se pega donde comienza; continuidad hasta donde acaba. Agenda/tracker controla repeticiones. Reutilizar ese ID para hitos sucesivos. No duplicar “revisar gastos”, “comparar movimientos” y “detectar desvíos” si son partes de una misma revisión breve: pueden formar una tarea con checklist en leyenda.
+Si dos fases requieren trabajos diferentes, documentar diferencia, fechas y carga; no duplicar el mismo trabajo con nombres distintos.
+
+8. CRONOGRAMA Y PENDIENTES
+Habilidades H1…: inicio, objetivo y prueba observable. Apoyos A1…: disponibilidad confirmada/propuesta y contacto/respuesta cuando aplique. Obstáculos O1…: efecto, ubicación y respuesta vinculada; destacar O principal.
+El GPT puede proponer fechas/horas razonables como estimación. Solo pregunta por compromisos externos o límites desconocidos que impidan programar. No obligar al alumno a inventar cada duración.
+Para tareas dependientes, fin del requisito debe preceder al inicio de la sucesora o explicitar el orden dentro del mismo día. Las flechas no deben retroceder en el calendario.
+AUDITORÍA DE ENTRADAS: para cada tarea identifica qué necesita y qué tarea produce ese insumo. La preparación debe preceder a todos sus consumidores, también si la primera ejecución ocurre el mismo día. «Ninguno» solo corresponde si todos sus insumos ya existen al inicio. Ejemplo: configurar una hoja precede tanto a probarla como a las revisiones que la utilizan.
+RECURRENCIAS ENCADENADAS: caminar y después registrar distancia, o producir y después revisar cada lote, sí tienen precedencia en cada sesión. Registrar el par en dependencias_sesion del motor y dibujar una flecha rotulada «cada sesión». No poner «ninguno», no convertirla en mera contribución y no exigir que termine toda la recurrencia antes de empezar la siguiente. Cada fecha de la sucesora debe incluir su predecesora. Para lotes o contingencias en fechas distintas usa dependencias_evento: [ID previo, fecha previa, ID siguiente, fecha siguiente]; ambas ejecuciones deben estar programadas. Rotula la flecha con las fechas o «por lote», sin esperar al final de toda la recurrencia. La preparación única sí va en dependencias normales hacia el inicio de la recurrencia. La leyenda, los pares ejecutados y el dibujo deben coincidir. Si una reposición llega al día hábil siguiente, el pedido y el reenvío no pueden ejecutarse el mismo día: programa sus minutos en fechas reales de disponibilidad, incluyendo recibir, volver a embalar y despachar. No convertir una ventana de varios días en una única sesión que haga todo antes de recibir el reemplazo.
+AGRUPACIÓN: si una práctica recurrente tiene la misma acción, método y recursos, conserva un ID aunque cambie su propósito de diagnóstico a demostración. La leyenda distingue los criterios de cada fecha; cambiar el nombre de una fase no justifica dos notas.
+Las habilidades necesarias para una tarea se desarrollan antes o mediante práctica supervisada indicada. No afirmar dominio antes de su evidencia.
+Toda incertidumbre esencial lleva responsable, fecha de resolución y efecto en el plan. No presentar montaje definitivo con hitos esenciales “según progreso” sin punto de revisión. Entregar borrador condicionado cuando corresponda.
+Si el alumno modifica la meta/plazo, recalcular duración, periodos, fechas, recurrencias, carga y densidad; conservar datos válidos y no reiniciar la entrevista completa.
+
+9. DENSIDAD FISICA: COMPROBAR ANTES DE ENTREGAR
+No basta “si no cabe, agregas papel”. El GPT diseña una distribución que pueda copiarse.
+Obtener o proponer medidas explícitas del papelógrafo y post-it. Referencia opcional, no supuesto oculto: papel de 90 × 60 cm horizontal, post-it pequeños de un CUARTO del normal (referencia 3,8 × 3,8 cm si el normal mide 7,6 × 7,6 cm; confirmar medidas reales) y grande de 15 × 15 cm. Si el alumno usa otras medidas, recalcular.
+Reservar márgenes de 3 cm, encabezado de 6 cm, franja inferior de 4 cm y, en el último papelógrafo, zona final de al menos 18 cm de ancho. Ajustar si el post-it grande o su texto requieren más. No declarar que estos tamaños son universales.
+MOTOR OBLIGATORIO: en este complemento ejecutar scripts/pert_cli.py con el estado y plan completos según PROTOCOLO_VERIFICACION.txt. Usa los mismos módulos de cálculo que la app, sin necesitar otra clave API. El agente comprueba significado y evidencia internamente; el código comprueba fechas, disponibilidad, dinero y geometría. El alumno no ve código. Solo una ejecución real aprobada y la revisión semántica completa permiten el PDF y el montaje. Si falta ejecución, conservar borrador sin declararlo listo.
+El motor asigna cinco filas: resultados, tareas, habilidades, obstáculos, apoyos. Distribuye el alto útil entre cinco filas; una hilera por fila, separación 1,5 cm. Cuenta cada color por periodo y prueba grupos de 1–3 periodos por papel. Calcula plazas por fila como floor((ancho_columna−3)/(ancho_nota+1,5)), permite ocupar hasta floor(0,70*plazas) y busca la menor cantidad de papeles. La reserva final es max(18, ancho_MP+3). Devuelve las posiciones x/y de la esquina superior izquierda medidas desde cada papel, columnas y filas. Copiar exactamente esos datos. Los títulos de fila se identifican por iconos; leyendas largas quedan en hoja aparte. No improvisar otra geometría después de verificar.
+
+LIMITES PARA DIBUJAR: no confundir el margen exterior con la zona final. Si W es el ancho del papel, m=3 cm y z=max(18, ancho_MP+3), en el último papel los periodos ocupan x=m hasta x=W-m-z; la zona MP va de x=W-m-z hasta x=W-m; queda aparte el margen derecho m. Divide solo el ancho de periodos entre sus columnas. Informa al alumno las líneas verticales exactas, además del ancho reservado. Ejemplo W=90, MP=15 y dos periodos finales: noviembre x=3–36, diciembre x=36–69, zona MP x=69–87, margen derecho x=87–90; MP x=70,5, ancho15. Nunca digas «los últimos 18 cm del papel»: eso empezaría en72 y contradiría la posición calculada. En hojas anteriores, periodos entre x=3 y x=W-3.
+
+Si el motor informa que no cabe, ampliar el ancho dedicado a periodos densos, modificar cortes en periodos reales o proponer materiales mayores; siempre volver a ejecutar y conservar notas. Si la pared no permite el resultado, preguntar por un ajuste antes de asegurar viabilidad.
+Las coordenadas solo prueban rectángulos y holgura. Auditar también longitud de textos, flechas y legibilidad: ID más 2–4 palabras por nota pequeña; fecha y esfuerzo en leyenda, salvo que puedan añadirse sin letra diminuta, resto a la leyenda. No afirmar que el programa evalúa el sentido de una meta, la suficiencia de una reserva o una estimación de tiempo.
+Mostrar al alumno solo resumen de densidad (cantidad por columna y holgura) e instrucciones de pegado; cálculos detallados quedan internos salvo petición.
+
+10. INVENTARIO Y MONTAJE FINAL
+Solo tras validar contenido, capacidad temporal/económica y densidad y obtener ok=True del motor sin pendientes esenciales.
+Entregar número/medidas/unión de papeles, periodos exactos, filas, ancho de zona final y MP.
+Inventario completo por ID: color; texto exacto breve; fecha/rango; frecuencia/esfuerzo de tareas; papelógrafo/columna/fila/posición; predecesores; qué habilita. Usar “no aplica” en elementos sin fecha o dependencia propia; no inventar dependencias a riesgos/apoyos.
+Una persona verde o un riesgo rosa se pega una sola vez con varias conexiones si afecta varias líneas. Todos los post-it aprobados deben estar presentes o indicar una consolidación explícita.
+No meter la Meta Principal completa de 70 palabras en una nota pequeña: MP breve + leyenda con criterios íntegros. Hacer lo mismo con tareas extensas.
+Flechas por IDs. Línea continua: dependencia; línea discontinua o identificada: continuidad temporal. Explicar la convención una vez. No es necesario aplicar el cálculo probabilístico PERT académico; aquí se sigue el método físico del taller.
+Cerrar con primera acción, revisión del plan y vista simple. Check = completado. X/círculo rojo = retraso; nueva fecha y revisión de sucesores. El plan es flexible, no una promesa de resultados.
+
+11. CRITERIO DE SALIDA
+No afirmar “listo/definitivo” si falta: criterio esencial de la meta, fecha válida, recurso imprescindible, precedencia, tiempo, ubicación o capacidad física. Decir brevemente qué falta y plantear una sola pregunta útil. Tampoco bloquear por preferencias menores: proponerlas y seguir cuando se validan en conjunto.
+
+12. CIERRES FALSOS QUE DEBES EVITAR
+- Aceptar una disponibilidad semanal llena y añadir configuración, pagos o revisión mensual. El motor debe recibir todas esas ejecuciones, con minutos. Una aprobación no crea tiempo.
+- Decir «integrado en 90 minutos» sin repartirlos: caminar 75 + conversar con entrenador 10 + registro 5 = 90; no caminar 90 y añadir ambos. La distribución es propuesta y se valida; no cambiar en secreto una prueba que exige 90.
+- Salario cobrado el último día: separar gastos necesarios hasta el siguiente salario ANTES de llamarlo ahorro libre, incluso si esos gastos caen después de la fecha meta. Aclarar definición de libre y reservas con el alumno.
+- Fotos producidas/práctica realizada no prueban calidad; definir evidencia breve relevante, sin inventar exigencias ajenas.
+- No convertir orden de presentación en dependencia. Presupuesto y pago de deuda pueden avanzar en paralelo; una revisión recurrente contribuye a varios hitos sin esperar a su última sesión.
+- Cambiar tareas de columna para descongestionar altera el calendario. Ubicar por fecha de inicio, y el motor distribuye físicamente.
+- No cerrar con una tarea del día 10 si el plan comienza con trabajo necesario el día 1.
+
+
+13. REGRESIONES DE CIERRE — VERSION 0.3.6
+- Inventario único: N pequeñas = cantidad de IDs únicos distintos de MP; N total = N pequeñas + 1. Comprobar contra las filas de la tabla entregada. Ejemplo: 5 M + 14 T + 1 H + 2 O + 3 A = 25 pequeñas, más MP = 26 totales.
+- Antes de densidad, comparar todas las tareas por acción, método y recursos. «Simulacro diario», «último simulacro» y «prueba final» con el mismo procedimiento y reparto 35+10 se consolidan en una tarea recurrente. Los criterios M5 y MP se verifican en fechas diferentes mediante contribuciones por evento; no exigir esperar el fin de toda la recurrencia para acreditar un hito anterior. Conservar cada ejecución y todos sus minutos.
+- Una hoja creada por T1 se necesita también para cargar interesados T3 y revisar pendientes T8, aunque compartan la fecha inicial. Registrar T1→T3 y T1→T8 con orden dentro del día; no «ninguno». Todos los registros posteriores necesitan esa preparación.
+- Si la leyenda dice que A1 apoya T8 y T14, dibujar ambas conexiones. Si T1 proporciona copias seguras a T2 y a la prueba final, incluir ambas; no confiar en que una cadena indirecta explique todo.
+- La holgura se informa con plazas libres reales por fila crítica/columna, derivadas de la distribución, además del inventario y los centímetros. No inventar un número ni contar MP dos veces.
+- Correcciones del diseño se hacen internamente antes de mostrar la propuesta. Nunca presentar una tabla que excede minutos y luego desmentirla en el mismo mensaje. El tiempo total de ejecución del proyecto es distinto del tiempo de montar el papelógrafo.
+
+14. AJUSTES DE MONTAJE Y FECHAS
+Fechas públicas ISO YYYY-MM-DD o día/mes/año. Nunca usar mes/día; 10/04 no significa 4 de octubre en español.
+Si una escala semanal no cabe, comprobar meses naturales completos o parciales, conservando cada nota, sesión, fecha y flecha. El adaptador local puede ajustar únicamente las columnas y posiciones; no elimina trabajo. Reauditar densidad y límites antes de mostrar el PDF.
+La cantidad de papelógrafos disponibles no obliga a usarlos todos. Destacar exactamente el obstáculo principal declarado con una estrella en su nota rosa.
+
+15. RESERVAS INTERMEDIAS Y COURIER
+En cada cobro de fin de mes, separar los gastos del mes siguiente antes de llamar libre al saldo; no restar esa misma reserva otra vez del saldo. Con saldo inicial 1500, octubre pagado, ingreso 2200 y gasto 1200: octubre saldo3700/reserva1200/libre2500; noviembre4700/1200/3500; diciembre5700/1200/4500. El cierre no garantiza liquidez anterior: comprobar también cada saldo intermedio.
+Para una entrega normal con posible reposición, calcular hacia atrás desde el último día de entrega hábil antes del límite. Respetar recogida, tránsito, llegada del reemplazo, empaque nuevo, reenvío y comprobación final. Todos los cobros normales preceden a sus envíos; la fecha de un hito es un límite, no permiso para cobrar después del último envío. Las tareas variables necesitan cantidades, fechas y minutos concretos.
+
+16. ACLARACIONES DE LA META
+Revisar cada aclaración solo por condiciones esenciales. Profesional, bien presentado u ordenado pueden requerir contenido o comprobación concreta. Tras una aclaración insuficiente, ayudar con una propuesta sencilla y fiel al propósito; pedir una aceptación o ajuste, sin darla por aceptada ni añadir umbrales. No reemplazar vaguedad por vaguedad. Con resultado observable, energía, entusiasmo y felicidad se conservan sin interrogarlas. Una meta admitida no se reabre por esos sinónimos ni cambios de situación actual.
+
+
+17. CONTINGENCIAS Y DISPONIBILIDAD REAL
+Una reposición opcional se representa con una sola tarea y nota, marcada «solo si ocurre». Reservar tiempo o dinero no significa que haya ocurrido un daño. El adaptador local genera una ruta por fecha real de comprobación de entrega, valida cada alternativa por separado y conserva la mayor reserva diaria/semanal compatible con la disponibilidad. No sumar alternativas mutuamente excluyentes ni incluir una tarea condicional en el calendario obligatorio. Explicar expresamente si se cubre como máximo una incidencia; varias requieren otro cálculo.
+Cada ruta conserva detección, pedido, llegada del proveedor, revisión del paquete, empaque/reenvío, entrega y comprobación. La llegada puede preceder al día en que el alumno tiene tiempo para revisarla. Respetar días hábiles, sábados de recogida confirmados y plazos de hitos aceptados. Un hito con límite 10/11 no cambia a 7/11 porque los despachos terminen antes.
+El patrón de minutos por día de la semana y cualquier excepción declarada son límites. No convertir 30 minutos de un domingo en 60. La reserva adicional de tiempo se informa por separado del trabajo base y del tiempo de montaje.
+En una empresa con inventario ya disponible, primer envío pagado por el comprador y declaración de ausencia de otros costos, el adaptador local puede comprobar los costos pendientes contra el capital inicial. La utilidad sigue incluyendo el costo de ese inventario. Presentar utilidad prevista sin incidencia y con una reposición; no fingir una fecha cierta de daño ni un gasto que todavía no existe. Si esas condiciones no están acreditadas, conservar el análisis completo de caja y costos.

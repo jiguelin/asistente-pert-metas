@@ -1,0 +1,5 @@
+interface:
+  default_prompt: Quiero construir mi PERT Chart desde mi Meta Principal
+  display_name: Asistente PERT CHART de Metas
+  short_description: Construye tu PERT físico con papelógrafos y post-it pequeños
+

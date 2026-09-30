@@ -1,0 +1,24 @@
+{
+  "files": [
+    {
+      "name": "EJEMPLOS_CALIDAD_PERT.txt",
+      "path": "references/EJEMPLOS_CALIDAD_PERT.txt"
+    },
+    {
+      "name": "GUIA_OPERATIVA_PERT_FISICO.txt",
+      "path": "references/GUIA_OPERATIVA_PERT_FISICO.txt"
+    },
+    {
+      "name": "MOTOR_PERT.py",
+      "path": "references/MOTOR_PERT.py"
+    },
+    {
+      "name": "Paso_10.pdf",
+      "path": "references/Paso_10.pdf"
+    },
+    {
+      "name": "PROTOCOLO_VERIFICACION.txt",
+      "path": "references/PROTOCOLO_VERIFICACION.txt"
+    }
+  ]
+}
