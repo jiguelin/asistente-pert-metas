@@ -222,7 +222,7 @@ def business_windows(f):
             'entrega_reposicion_maximo':final.isoformat()}
 
 
-def calculations(f):
+def calculations(f, include_calendar=True):
     out=[]
     if f.get('inicio') and f.get('fin'):
         a=date.fromisoformat(f['inicio']);b=date.fromisoformat(f['fin'])
@@ -233,7 +233,8 @@ def calculations(f):
         if n<=370:
             weekdays=['lunes','martes','miércoles','jueves','viernes','sábado','domingo']
             out.append('Cantidad de días reales: '+', '.join(f'{name}: {sum((a+timedelta(days=k)).weekday()==idx for k in range(n))}' for idx,name in enumerate(weekdays)))
-            out.append('Fechas y días reales: '+', '.join(f'{a+timedelta(days=k)} {weekdays[(a+timedelta(days=k)).weekday()]}' for k in range(n)))
+            if include_calendar:
+                out.append('Fechas y días reales: '+', '.join(f'{a+timedelta(days=k)} {weekdays[(a+timedelta(days=k)).weekday()]}' for k in range(n)))
         needed=['saldo','ingreso','gasto','reserva','objetivo','gastos_inicio_pagados','cobro_fin_mes']
         if f.get('tipo')=='ahorro' and all(k in f for k in needed) and f['cobro_fin_mes']=='true':
             months=[];d=a.replace(day=1)

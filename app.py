@@ -209,31 +209,37 @@ try:
     with st.chat_message("user"):
         st.markdown(text)
     with st.chat_message("assistant"):
-        with st.spinner("Preparando tu siguiente paso...", show_time=True):
-            _assistant.TRACE.set(st.session_state.qa_trace if st.query_params.get("qa") == "1" else None)
-            reply, finalize, usage = respond(client, model, st.session_state.messages,
-                                             datetime.now(ZoneInfo("America/Lima")).date().isoformat(),
-                                             known_facts=st.session_state.known_facts,
-                                             accepted_goal=st.session_state.accepted_goal)
-            if usage.get('snapshot'):
-                st.session_state.known_facts = usage['snapshot']['facts']
-                st.session_state.accepted_goal = usage['snapshot'].get('goal_validation')
-            for key in ("input_tokens", "output_tokens"):
-                st.session_state.usage[key] += usage.get(key, 0)
-            if finalize:
-                audit, missing, extra_usage = build_final(
-                    client, model, st.session_state.messages,
-                    datetime.now(ZoneInfo("America/Lima")).date().isoformat(),
-                    ready_snapshot=usage.get('snapshot'))
+        progress_note = st.empty()
+        progress_token = _assistant.PROGRESS.set(progress_note.caption)
+        try:
+            with st.spinner("Estoy trabajando en tu plan…", show_time=True):
+                _assistant.TRACE.set(st.session_state.qa_trace if st.query_params.get("qa") == "1" else None)
+                reply, finalize, usage = respond(client, model, st.session_state.messages,
+                                                 datetime.now(ZoneInfo("America/Lima")).date().isoformat(),
+                                                 known_facts=st.session_state.known_facts,
+                                                 accepted_goal=st.session_state.accepted_goal)
+                if usage.get('snapshot'):
+                    st.session_state.known_facts = usage['snapshot']['facts']
+                    st.session_state.accepted_goal = usage['snapshot'].get('goal_validation')
                 for key in ("input_tokens", "output_tokens"):
-                    st.session_state.usage[key] += extra_usage.get(key, 0)
-                if audit:
-                    st.session_state.final = audit
-                    reply = final_message(audit)
-                elif missing and missing[0] != "No se pudo completar la verificación interna del montaje":
-                    reply = missing[0] if missing[0].startswith('¿') else "Para terminar el plan, ¿puedes precisar " + missing[0].rstrip(" .?") + "?"
-                else:
-                    raise AssistantError("Todavía no pude verificar el montaje completo. Puedes reintentar tu mensaje con el botón de abajo; tu avance se conserva.")
+                    st.session_state.usage[key] += usage.get(key, 0)
+                if finalize:
+                    audit, missing, extra_usage = build_final(
+                        client, model, st.session_state.messages,
+                        datetime.now(ZoneInfo("America/Lima")).date().isoformat(),
+                        ready_snapshot=usage.get('snapshot'))
+                    for key in ("input_tokens", "output_tokens"):
+                        st.session_state.usage[key] += extra_usage.get(key, 0)
+                    if audit:
+                        st.session_state.final = audit
+                        reply = final_message(audit)
+                    elif missing and missing[0] != "No se pudo completar la verificación interna del montaje":
+                        reply = missing[0] if missing[0].startswith('¿') else "Para terminar el plan, ¿puedes precisar " + missing[0].rstrip(" .?") + "?"
+                    else:
+                        raise AssistantError("Todavía no pude verificar el montaje completo. Puedes reintentar tu mensaje con el botón de abajo; tu avance se conserva.")
+        finally:
+            _assistant.PROGRESS.reset(progress_token)
+            progress_note.empty()
         st.markdown(reply)
         st.session_state.messages.append({"role": "assistant", "content": reply})
         st.session_state.pending_text = None

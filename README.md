@@ -1,8 +1,12 @@
 # Asistente PERT Chart de Metas — app para el taller
 
-**Estado:** validación funcional aprobada en los cuatro casos (salud, finanzas, empresa y aprendizaje), con PDF completo y revisado. Las 49 pruebas locales pasan, también desde una copia independiente; 30 primeras solicitudes simultáneas a IA real respondieron correctamente. Disponible para uso individual y piloto del taller. No se han probado micrófonos/permisos en teléfonos reales ni30 cierres complejos simultáneos.
+**Estado:** los cuatro casos de prueba anteriores produjeron planes y PDF válidos, pero un caso real de salud quedó bloqueado durante más de cinco minutos al preparar tareas. La aplicación no está certificada para el evento. Las 61 pruebas locales pasan; los 30 primeros mensajes simultáneos ya probados no equivalen a 30 cierres completos.
 
-Las cuatro entrevistas iniciales fueron nuevas; las regresiones finales reutilizaron sus avances aprobados. El cierre empresarial necesitó tres borradores internos y unos10 minutos. El alumno ve únicamente el resultado que pasa los controles; el indicador muestra tiempo de espera.
+## Corrección de latencia (septiembre de 2026)
+
+Los pasos conversacionales usan las reglas esenciales sin adjuntar la guía de montaje completa. Si faltan los días disponibles, se pregunta ese dato antes de generar tareas. Las recurrencias se proponen compactas, sin enumerar cientos de fechas. Cada turno de conversación tiene un presupuesto total de 90 segundos, como máximo tres borradores y ninguna repetición automática del SDK; al agotarlo, se cierra la lectura del flujo y se conserva el mensaje pendiente. El alumno ve la etapa actual, sin recibir borradores sin validar.
+
+El cierre físico mantiene la guía y los controles completos. Su tiempo y capacidad simultánea todavía deben medirse; estos límites conversacionales no constituyen una garantía de 90 segundos para el PDF final. Las pruebas locales verifican cancelación, conservación de contexto, preguntas faltantes y límites de intentos con respuestas simuladas. La regresión con IA real debe registrarse por separado.
 
 ## Corrección de aclaraciones (septiembre de 2026)
 

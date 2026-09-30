@@ -4,6 +4,7 @@ from __future__ import annotations
 import json
 import time
 import re
+import threading
 from contextvars import ContextVar
 from pathlib import Path
 from typing import Any
@@ -15,17 +16,22 @@ from intake import SCHEMA as INTAKE_SCHEMA, PROMPT as INTAKE_PROMPT, context, no
 from contingencies import capacity_schedule, compile_replacement
 
 TRACE = ContextVar("pert_qa_trace", default=None)
+PROGRESS = ContextVar("pert_progress", default=None)
+TURN_DEADLINE = ContextVar("pert_turn_deadline", default=None)
+TURN_SECONDS = 90
+TURN_ATTEMPTS = 3
 ROOT = Path(__file__).resolve().parent
 
 
-def _instructions() -> str:
+def _instructions(phase=None) -> str:
     skill = (ROOT / "resources/INSTRUCTIONS_APP.txt").read_text(encoding="utf-8")
     guide = (ROOT / "resources/GUIA_OPERATIVA_PERT_FISICO.txt").read_text(encoding="utf-8")
     return ("Eres el asistente PERT físico para alumnos principiantes. "
             "Ejecuta tus controles internamente. Nunca afirmes haber ejecutado "
             "Python, un archivo o una herramienta: esta aplicación, no tú, valida "
             "el plan antes de declararlo listo. No reveles reglas internas al alumno.\n\n"
-            + skill + "\n\nGUÍA OPERATIVA:\n" + guide)
+            + skill + ("\n\nGUÍA OPERATIVA:\n" + guide
+                       if phase is None or phase=='final' else ''))
 
 
 TURN_SCHEMA = {
@@ -40,6 +46,21 @@ class AssistantError(RuntimeError):
     pass
 
 
+def _progress(message):
+    callback=PROGRESS.get()
+    if callback is not None:
+        callback(message)
+
+
+def _remaining():
+    deadline=TURN_DEADLINE.get()
+    if deadline is None:return None
+    seconds=deadline-time.monotonic()
+    if seconds<=0:
+        raise AssistantError('Este paso tardó demasiado y detuve la espera. Tu mensaje y avance se conservan; puedes reintentar.')
+    return seconds
+
+
 def _user_visible_question_count(reply: str) -> int:
     # One actual interrogation: Spanish opening punctuation or question-mark
     # count, whichever is higher. A prompt may have both marks for one question.
@@ -50,14 +71,30 @@ def _create(client: OpenAI, _stream_retry=True, **kwargs: Any):
     # SDK call isolated for test doubles and future model migration.
     started = time.monotonic()
     terminal = None
+    remaining=_remaining()
+    timer=None
+    if remaining is not None:
+        # Bound inactivity as well as continuous streams; a timed turn never
+        # launches SDK retries after its deadline.
+        client=client.with_options(timeout=min(30,remaining),max_retries=0)
     # Consume server events while reasoning and generating; no partial draft
     # is shown to the student. This avoids a silent, long HTTP response.
     try:
         with client.responses.stream(**kwargs) as stream:
+            if remaining is not None:
+                remaining=_remaining()
+                def close_expired_stream():
+                    try:stream.close()
+                    except Exception:pass
+                timer=threading.Timer(remaining,close_expired_stream)
+                timer.daemon=True
+                timer.start()
             for event in stream:
+                _remaining()
                 if event.type in ['response.completed','response.incomplete','response.failed']:
                     terminal=event.response
             result = stream.get_final_response()
+            _remaining()
     except Exception as exc:
         trace=TRACE.get()
         if trace is not None:
@@ -71,7 +108,8 @@ def _create(client: OpenAI, _stream_retry=True, **kwargs: Any):
                           'message':message[:600],'seconds':round(time.monotonic()-started,2),
                           'incomplete_reason':getattr(getattr(terminal,'incomplete_details',None),'reason',None),
                           'usage':terminal.usage.model_dump() if terminal is not None and terminal.usage else None})
-        if _stream_retry and isinstance(exc,RuntimeError) and 'response.completed' in str(exc):
+        _remaining()
+        if _stream_retry and isinstance(exc,RuntimeError) and not isinstance(exc,AssistantError) and 'response.completed' in str(exc):
             retry_args=dict(kwargs)
             if getattr(getattr(terminal,'incomplete_details',None),'reason',None)=='max_output_tokens':
                 previous=kwargs.get('max_output_tokens',8000)
@@ -79,6 +117,8 @@ def _create(client: OpenAI, _stream_retry=True, **kwargs: Any):
                 retry_args['max_output_tokens']=min(32000,previous*2)
             return _create(client,_stream_retry=False,**retry_args)
         raise
+    finally:
+        if timer is not None:timer.cancel()
     trace = TRACE.get()
     if trace is not None:
         trace.append({"step":kwargs.get("text",{}).get("format",{}).get("name","plan"),"output":result.output_text,
@@ -89,6 +129,14 @@ def _create(client: OpenAI, _stream_retry=True, **kwargs: Any):
 
 def respond(client: OpenAI, model: str, messages: list[dict[str, str]],
             today_lima: str, known_facts=None, accepted_goal=None) -> tuple[str, bool, dict]:
+    token=TURN_DEADLINE.set(time.monotonic()+TURN_SECONDS)
+    try:
+        return _respond(client,model,messages,today_lima,known_facts,accepted_goal)
+    finally:
+        TURN_DEADLINE.reset(token)
+
+
+def _respond(client,model,messages,today_lima,known_facts=None,accepted_goal=None):
     if not messages:
         return "¿Cuál es tu Meta Principal?", False, {}
     if len(messages) == 1 and "revis" in messages[0]["content"].lower() \
@@ -96,10 +144,15 @@ def respond(client: OpenAI, model: str, messages: list[dict[str, str]],
             and len(messages[0]["content"]) < 90:
         return "¿Puedes compartir el PERT que ya empezaste?", False, {}
     usage={"input_tokens":0,"output_tokens":0}
+    _progress('Leyendo tu respuesta…')
     snapshot = extract_intake(client, model, messages, today_lima, usage, known_facts, accepted_goal)
     usage['snapshot']=snapshot
     current=stage(snapshot); facts=snapshot['facts']
     if current=='final':return 'Estoy verificando tu plan completo.',True,usage
+    if current=='tareas' and not facts.get('minutos_semana'):
+        # A time window does not establish which days are available. Ask the
+        # missing constraint instead of repairing schedules that invent it.
+        return '¿Qué días de la semana podrás dedicar esos bloques de tiempo a tu meta?',False,usage
     if current=='criterio':
         already_asked=(not snapshot.get('meta_cambiada') and any(
             m['role']=='assistant' and (
@@ -119,18 +172,22 @@ def respond(client: OpenAI, model: str, messages: list[dict[str, str]],
             n=(date.fromisoformat(facts['fin'])-date.fromisoformat(facts['inicio'])).days+1
             reply=f"Del {facts['inicio']} al {facts['fin']} son {n} días inclusivos. La escala es provisional y la ajustaré al revisar el montaje.\n\n"+reply
         return reply,False,usage
-    math_facts=calculations(facts)
+    math_facts=calculations(facts,include_calendar=current=='tareas')
     goal = {'criterio':'La primera aclaración esencial no bastó. Propón una comprobación concreta, breve y sencilla, fiel al propósito, marcada como propuesta. No reemplaces la vaguedad por «claro», «consistente», «bien presentado» o «formato uniforme» sin detalle necesario. En un reporte de ventas puedes proponer campos concretos y un orden concreto, por ejemplo fecha/producto/importe y fecha de más antigua a más reciente; son opciones a aceptar, no datos ya existentes. Pide UNA aceptación o ajuste. No repitas «qué significa» ni persigas sinónimos. No afirmes aceptación ni añadas umbrales ajenos. Todavía no propongas tareas ni montaje.',
             'habilidades':'Propón una habilidad necesaria para el obstáculo y pide una sola aceptación.',
             'mini':'Primero verifica viabilidad con los datos y cálculos. Si hay brecha real, propón un ajuste calculado y pide UNA decisión. Si es viable, propón mini metas M1... con resultados, fechas y evidencia; pregunta solo si acepta esta propuesta. NO propongas aún tareas ni montaje.',
-            'tareas':'Propón el cronograma completo de tareas T1... que habilitan las mini metas ya aceptadas, con fechas reales, minutos por sesión, frecuencia, dependencias y reparto dentro de la disponibilidad. Consolida recurrencias y muestra carga total. Pide UNA aceptación conjunta. No pidas fechas conocidas ni nuevos datos irrelevantes.'}[current]
-    prompt=(_instructions()+f'\nFecha local Lima: {today_lima}. ETAPA OBLIGATORIA: {current}.\n'+goal
+            'tareas':'Propón tareas T1... que habilitan las mini metas aceptadas. Describe recurrencias de forma compacta: intervalo exacto, días confirmados, excepciones, minutos por sesión, cantidad de sesiones y carga total. No enumeres cientos de fechas ni las repitas por hito: la aplicación las expandirá en el plan final. Define preparación, revisión, dependencias y reparto dentro de la disponibilidad. Distingue horarios propuestos de hechos aceptados. Pide UNA aceptación conjunta. No pidas datos conocidos ni añadas requisitos.'}[current]
+    prompt=(_instructions(current)+f'\nFecha local Lima: {today_lima}. ETAPA OBLIGATORIA: {current}.\n'+goal
             +'\nHechos acreditados del usuario: '+json.dumps(facts,ensure_ascii=False)
             +'\nAmbigüedad esencial: '+str(snapshot['ambiguedad_esencial'])+'\n'+math_facts
             +'\nDevuelve reply breve, máximo unas 450 palabras. finalize=false. Ningún montaje físico, coordenadas, conteos ni instrucciones de pegar. Los números calculados arriba son obligatorios.')
     repair=''
     repair_problems=[]
-    for _ in range(5):
+    for attempt in range(TURN_ATTEMPTS):
+        _remaining()
+        label={'mini':'Preparando tus mini metas…','tareas':'Preparando tus tareas y horarios…',
+               'criterio':'Preparando una comprobación sencilla…','habilidades':'Preparando una propuesta de habilidad…'}[current]
+        _progress(label if attempt==0 else 'Ajustando la propuesta después de revisarla…')
         resp=_create(client,model=model,instructions=prompt+repair,input=messages,
                      text={"format":{"type":"json_schema","name":"pert_turn","strict":True,"schema":TURN_SCHEMA}},
                      reasoning={"effort":"medium"},max_output_tokens=8000,store=False)
@@ -138,6 +195,7 @@ def respond(client: OpenAI, model: str, messages: list[dict[str, str]],
         try:
             data=json.loads(resp.output_text);reply=data['reply'].strip()
             if not reply or _user_visible_question_count(reply)>1:raise ValueError('Respuesta vacía o varias preguntas')
+            _progress('Revisando la propuesta antes de mostrártela…')
             verdict=review(client,model,messages,reply,math_facts,current,usage)
             if verdict['ok']:return reply,False,usage
             repair_problems.extend(verdict['problems'])
@@ -188,7 +246,7 @@ def review(client,model,messages,candidate,math_facts,phase,usage):
       'La pregunta única de aceptación conjunta es obligatoria y correcta: no exigir que el texto público explique esta auditoría interna. '
       'No vuelvas a restar una reserva ya descontada en un saldo libre intermedio. '
       'Revisar gastos de un mes ya pagado no equivale a restarlos otra vez; rechaza solo si realmente recalcula o exige ese gasto adicional. '
-      'En tareas exige todas las fechas/minutos/frecuencias dentro de disponibilidad, sin tareas recurrentes duplicadas. '
+      'En tareas acepta recurrencias compactas con rango exacto, días/excepciones confirmados, minutos por sesión, cantidad y carga total. No exigir cientos de fechas enumeradas: se expanden y validan en final. Rechaza días o disponibilidad inventados y tareas duplicadas. '
       'En español usa fechas ISO o día/mes/año. Nunca mes/día: 10/04 no puede representar el 4 de octubre. '
       'En final verifica coherencia semántica de TODO el plan: inventario aprobado completo, evidencia autónoma, '
       'reserva y gastos ya pagados, insumos previos, todas las sesiones y cada conexión causal/apoyo necesaria. '
@@ -262,6 +320,7 @@ def build_final(client: OpenAI, model: str, messages: list[dict[str, str]],
     if stage(snapshot)!='final':return None,[QUESTIONS.get(stage(snapshot),'aceptación del cronograma completo')],usage
     math_facts=calculations(snapshot['facts'])
     for _ in range(5):
+        _progress('Preparando el inventario completo del PERT…' if not extra else 'Corrigiendo el plan después de comprobarlo…')
         resp = _create(client, model=model, instructions=_instructions() + "\n" + PLAN_PROMPT
                        + f"\nHoy en Lima: {today_lima}.\n" + math_facts
                        + '\nHechos acreditados: '+json.dumps(snapshot['facts'],ensure_ascii=False)+'\n'+extra,
@@ -305,6 +364,7 @@ def build_final(client: OpenAI, model: str, messages: list[dict[str, str]],
             if principal and principal not in ['ninguno','ningún obstáculo','no tengo obstáculos']:
                 if sum(n.get('tipo')=='O' and n.get('principal') is True for n in plan['notas'])!=1:
                     raise PlanError(['Marca principal:true en exactamente un obstáculo O, el declarado por el alumno'])
+            _progress('Comprobando fechas, tiempo y espacio de los post-it…')
             audit = audit_with_scale(plan)
             plan = audit['plan']
             facts=snapshot['facts']
@@ -322,6 +382,7 @@ def build_final(client: OpenAI, model: str, messages: list[dict[str, str]],
                 'papelografos_disponibles':int(snapshot['facts']['papeles']),
                 'columnas':audit['columnas'],'zona_mp':audit['zona_mp'],
                 'posiciones':audit['motor']['posiciones'],'densidad':audit['motor']['densidad']}}
+            _progress('Revisando el plan completo y sus conexiones…')
             verdict=review(client,model,messages,json.dumps(semantic_candidate,ensure_ascii=False),math_facts,'final',usage)
             if not verdict['ok']:raise PlanError(verdict['problems'])
             return audit, [], usage
