@@ -104,7 +104,7 @@ def final_text(audit):
         lines.append(f"- Hoja {i}: {len(group)} columna(s): {labels}.")
     lines+=['Reserva una zona a la derecha de la última hoja para la Meta Principal, fuera de las columnas. No es un periodo adicional.',
     'Usa post-it pequeños (un cuarto del habitual), con el ID y la etiqueta corta. Para la Meta Principal, uno normal o una tarjeta donde quepa el texto completo.',
-    'Coloca bandas para mini metas, tareas, habilidades, obstáculos y apoyos. El PDF indica dónde ubicar cada nota. Deja espacio entre notas para moverlas y dibujar las conexiones relevantes.',
+    'Anota el punto de partida junto al inicio y marca con una estrella el obstáculo principal, sin añadir columnas. Coloca bandas para mini metas, tareas, habilidades, obstáculos y apoyos. El PDF indica dónde ubicar cada nota. Deja espacio entre notas para moverlas y dibujar las conexiones relevantes.',
     '**Cada semana:** comprueba avances, marca logros, mueve notas o ajusta fechas y añade obstáculos o apoyos que aparezcan. Desglosa tus acciones pequeñas en tu agenda.',
     'Descarga el PDF para conservar el mapa, todas las notas y su leyenda. La distribución es orientativa; adapta el espaciado al papel que uses.']
     return '\n\n'.join(lines)
