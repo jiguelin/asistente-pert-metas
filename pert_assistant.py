@@ -254,6 +254,17 @@ def extract_intake(client,model,messages,today,usage,known_facts=None,accepted_g
         add_usage(usage,resp)
         try:
             snapshot=normalize(json.loads(resp.output_text),users,known_facts,accepted_goal)
+            # Resume files carry the transcript, not the server's fact ledger.
+            # Answers to our own plain-text questions are direct evidence;
+            # an extractor omission must not send an advanced student back.
+            textual=['situacion','obstaculos','principal','habilidades','apoyos','disponibilidad']
+            for previous,current in zip(messages,messages[1:]):
+                if previous['role']!='assistant' or current['role']!='user':continue
+                answer=current['content'].strip()
+                if not answer or re.fullmatch(r'(?:no s[eé]|no entiendo|ay[uú]dame|prop[oó]nme)[.! ]*',answer,re.I):continue
+                for key in textual:
+                    if previous['content'].strip().endswith(QUESTIONS[key]):
+                        snapshot['facts'].setdefault(key,answer)
             if snapshot['meta_verificable'] and 'meta' not in snapshot['facts']:
                 continue
             return snapshot
