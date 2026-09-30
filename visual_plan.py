@@ -48,7 +48,8 @@ def audit_visual(plan):
         x,y,t=edge['de'],edge['a'],edge['tipo']
         if x not in byid or y not in byid or x==y:raise ValueError('Conexión inválida.')
         if t=='antes':
-            if byid[x]['fecha']>byid[y]['fecha']:raise ValueError('Dependencia con fecha inversa.')
+            if byid[x]['fecha']>byid[y]['fecha']:
+                raise ValueError(f"La relación antes {x} ({byid[x]['texto']}, {byid[x]['fecha']}) -> {y} ({byid[y]['texto']}, {byid[y]['fecha']}) tiene fechas invertidas. Si es dependencia real, mueve la fecha propuesta de {y} a {byid[x]['fecha']} o después, dentro del plazo; si es contribución o trabajo paralelo, cambia el tipo de relación. No cambies las fechas que el alumno haya fijado explícitamente. Revisa todas las relaciones antes al reparar.")
             graph[x].append(y)
         elif t not in ('contribuye','apoyo','riesgo'):raise ValueError('Relación desconocida.')
     done=set();active=set()
@@ -69,7 +70,7 @@ def audit_visual(plan):
     while i<len(ps):
         group=[]
         while i<len(ps) and len(group)<3:
-            dense=max(counts[i].values(),default=0)>3
+            dense=max(counts[i].values(),default=0)>4
             if dense and group:break
             group.append(i);i+=1
             if dense:break

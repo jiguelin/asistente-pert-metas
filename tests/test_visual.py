@@ -67,6 +67,18 @@ class VisualTests(unittest.TestCase):
         payload={'ambiguedad_esencial':None,'meta_verificable':False,'meta_cambiada':False,'cambio_meta_cita':None,'hechos':[{'campo':'habilidades','valor':'tablas dinámicas','usuario':0,'cita':'Ahora sé fórmulas básicas. Habilidad a aprender: tablas dinámicas'}]}
         self.assertEqual(va.normalize_visual(payload,[user])['facts']['habilidades'],'tablas dinámicas')
 
+    def test_case_and_punctuation_do_not_erase_evidence(self):
+        user='Necesito aprender disciplina, concentración y planificación.'
+        payload={'ambiguedad_esencial':None,'meta_verificable':False,'meta_cambiada':False,'cambio_meta_cita':None,'hechos':[{'campo':'habilidades','valor':'Disciplina, concentración y planificación','usuario':0,'cita':'necesito aprender disciplina concentración y planificación'}]}
+        self.assertIn('concentración',va.normalize_visual(payload,[user])['facts']['habilidades'])
+        payload['hechos']=[]
+        self.assertIn('disciplina',va.normalize_visual(payload,[user])['facts']['habilidades'])
+
+    def test_repair_identifies_the_exact_invalid_edge(self):
+        p=sample();p['conexiones']=[{'de':'M2','a':'T1','tipo':'antes'}]
+        with self.assertRaisesRegex(ValueError,'M2.*2026-10-25.*T1.*2026-10-01'):
+            audit_visual(p)
+
     def test_prompt_bounds_and_strategy(self):
         self.assertLess(len(va.instructions()),8000)
         self.assertIn('obstáculo principal',va.instructions());self.assertIn('No calcules horas',va.instructions())

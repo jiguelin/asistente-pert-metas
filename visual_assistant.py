@@ -2,6 +2,7 @@
 import json
 import re
 import time
+import unicodedata
 from copy import deepcopy
 from datetime import date
 from pathlib import Path
@@ -47,6 +48,13 @@ def accepted(text):
 def normalize_visual(payload,users,known=None,accepted_goal=None):
     # The extractor may emit one item per list member. Validate each quote
     # before merging, rather than letting the last one erase the earlier facts.
+    payload=deepcopy(payload)
+    def words(text):
+        return ' '.join(re.findall(r'\w+',unicodedata.normalize('NFKC',text).casefold()))
+    for h in payload['hechos']:
+        q=words(h.get('cita',''))
+        source=next((u for u in users if q and q in words(u)),None)
+        if source is not None:h['cita']=source
     grouped={}
     for h in payload['hechos']:
         one={**payload,'hechos':[h]}
@@ -64,6 +72,9 @@ def normalize_visual(payload,users,known=None,accepted_goal=None):
         if not snap['facts'].get(k):
             matches=[m.group(1).strip() for u in users for m in re.finditer(label+r'\s*:\s*([^.!?\n]+)',u,re.I)]
             if matches:snap['facts'][k]=matches[-1]
+    if not snap['facts'].get('habilidades'):
+        matches=[m.group(1).strip() for u in users for m in re.finditer(r'Necesito aprender\s+([^.!?\n]+)',u,re.I)]
+        if matches:snap['facts']['habilidades']=matches[-1]
     return snap
 
 
