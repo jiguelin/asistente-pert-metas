@@ -75,6 +75,13 @@ def normalize_visual(payload,users,known=None,accepted_goal=None):
     if not snap['facts'].get('habilidades'):
         matches=[m.group(1).strip() for u in users for m in re.finditer(r'Necesito aprender\s+([^.!?\n]+)',u,re.I)]
         if matches:snap['facts']['habilidades']=matches[-1]
+    for key in ['inicio','fin']:
+        value=str(snap['facts'].get(key,''))
+        match=re.fullmatch(r'\s*(\d{4}-\d{2}-\d{2})[. ]*',value)
+        if match:snap['facts'][key]=match.group(1)
+    obstacles=str(snap['facts'].get('obstaculos','')).strip(' .!¿?').casefold()
+    if obstacles in ['ninguno','ningún obstáculo','no tengo obstáculos']:
+        snap['facts'].setdefault('principal','Ninguno identificado')
     return snap
 
 

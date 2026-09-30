@@ -79,6 +79,12 @@ class VisualTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError,'M2.*2026-10-25.*T1.*2026-10-01'):
             audit_visual(p)
 
+    def test_date_and_none_sentence_punctuation(self):
+        user='Empiezo el 1 de octubre de 2026. No tengo obstáculos.'
+        payload={'ambiguedad_esencial':None,'meta_verificable':False,'meta_cambiada':False,'cambio_meta_cita':None,'hechos':[{'campo':'inicio','valor':'2026-10-01.','usuario':0,'cita':'Empiezo el 1 de octubre de 2026'},{'campo':'obstaculos','valor':'Ninguno.','usuario':0,'cita':'No tengo obstáculos'}]}
+        f=va.normalize_visual(payload,[user])['facts']
+        self.assertEqual(f['inicio'],'2026-10-01');self.assertEqual(f['principal'],'Ninguno identificado')
+
     def test_prompt_bounds_and_strategy(self):
         self.assertLess(len(va.instructions()),8000)
         self.assertIn('obstáculo principal',va.instructions());self.assertIn('No calcules horas',va.instructions())
