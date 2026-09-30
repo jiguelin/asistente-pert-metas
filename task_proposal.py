@@ -54,9 +54,9 @@ SCHEMA = {
                             "required": ["fecha", "minutos", "pasos"], "additionalProperties": False,
                         },
                     },
-                    "habilita": {"type": "array", "items": {"type": "string"}},
-                    "requisitos": {"type": "array", "items": {"type": "string"}},
-                    "orden_sesion": {"type": "array", "items": {"type": "string"}},
+                    "habilita": {"type": "array", "items": {"type": "string", "pattern": r"^M(?:[1-9][0-9]*|P)$"}},
+                    "requisitos": {"type": "array", "description": "IDs de otras tareas T que deben terminar antes del comienzo. [] si no hay.", "items": {"type": "string", "pattern": r"^T[1-9][0-9]*$"}},
+                    "orden_sesion": {"type": "array", "description": "IDs de OTRAS tareas T previas en cada fecha, NO acciones/pasos ni el ID propio. [] si no hay.", "items": {"type": "string", "pattern": r"^T[1-9][0-9]*$"}},
                     "pasos": {
                         "type": "array", "minItems": 1,
                         "items": {
@@ -116,6 +116,8 @@ def _ids(value, label):
 def _text(value, label):
     if not isinstance(value, str) or not value.strip():
         _fail("Falta texto en " + label)
+    if "?" in value or "¿" in value:
+        _fail("La propuesta de tareas no puede introducir otra pregunta en " + label)
     return value.strip()
 
 
@@ -132,7 +134,7 @@ def _steps(steps, minutes, ident):
         step_minutes = math.fsum(step["minutos"] for step in steps)
     except OverflowError:
         _fail("Suma de pasos inválida en " + ident)
-    if not math.isclose(step_minutes, minutes, rel_tol=1e-9, abs_tol=1e-6):
+    if not math.isclose(step_minutes, minutes, rel_tol=0, abs_tol=1e-6):
         _fail("Los pasos no suman los minutos de la sesión de " + ident)
     return steps
 
@@ -294,7 +296,7 @@ def prepare_proposal(data, facts):
         for label in ("requisitos", "orden_sesion"):
             for previous in _ids(task[label], label + " de " + ident):
                 if previous not in by_id or previous == ident:
-                    _fail("Dependencia con ID inexistente o propio en " + ident)
+                    _fail(label+" de "+ident+": "+previous+" no es ID de otra tarea existente. Las acciones de la misma tarea van en pasos; usa [] si no depende de otra T.")
                 edge = [previous, ident]
                 plan["dependencias" if label == "requisitos" else "dependencias_sesion"].append(edge)
         milestones = _ids(task["habilita"], "habilita de " + ident)

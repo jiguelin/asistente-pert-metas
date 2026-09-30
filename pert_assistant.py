@@ -200,7 +200,9 @@ def _respond(client,model,messages,today_lima,known_facts=None,accepted_goal=Non
                  'Usa dias semanales 0=lunes..6=domingo para recurrencias, fechas para ejecuciones puntuales adicionales, '
                  'excluir para omisiones y excepciones para cambiar minutos/pasos de fechas previstas. '
                  'No dupliques fechas. Requisitos solo si la tarea previa termina antes de empezar la siguiente; '
-                 'orden_sesion para secuencia dentro de cada ejecución. Habilita únicamente IDs M/MP ya aprobados. '
+                 'orden_sesion contiene solo IDs de OTRAS T previas en cada ejecución; nunca acciones ni el ID propio. '
+                 'Si solo hay un checklist de la misma tarea, orden_sesion=[], y las acciones ordenadas van en pasos. '
+                 'Habilita únicamente IDs M/MP ya aprobados. '
                  'No des por preparado un documento, una pauta o una copia no declarados: propón su preparación dentro de los pasos y tiempos. '
                  'Puedes seguir la orientación de un coach ya declarado sin inventar reuniones nuevas ni una pauta previamente aprobada. '
                  'Preferir dos tareas claras cuando cubran el propósito, agrupando preparación, registro y revisión en sus sesiones.')

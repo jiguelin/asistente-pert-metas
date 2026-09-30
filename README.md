@@ -1,6 +1,6 @@
 # Asistente PERT Chart de Metas — app para el taller
 
-**Estado:** los cuatro casos de prueba anteriores produjeron planes y PDF válidos, pero un caso real de salud quedó bloqueado durante más de cinco minutos al preparar tareas. La aplicación no está certificada para el evento. Las 78 pruebas locales pasan; los 30 primeros mensajes simultáneos ya probados no equivalen a 30 cierres completos.
+**Estado:** los cuatro casos de prueba anteriores produjeron planes y PDF válidos, pero un caso real de salud quedó bloqueado durante más de cinco minutos al preparar tareas. La aplicación no está certificada para el evento. Las 94 pruebas locales pasan; los 30 primeros mensajes simultáneos ya probados no equivalen a 30 cierres completos.
 
 ## Corrección de latencia (septiembre de 2026)
 
