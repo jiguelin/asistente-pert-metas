@@ -120,7 +120,7 @@ def respond(client: OpenAI, model: str, messages: list[dict[str, str]],
             reply=f"Del {facts['inicio']} al {facts['fin']} son {n} días inclusivos. La escala es provisional y la ajustaré al revisar el montaje.\n\n"+reply
         return reply,False,usage
     math_facts=calculations(facts)
-    goal = {'criterio':'La primera aclaración esencial no bastó. Ayuda proponiendo una comprobación concreta, breve y sencilla, fiel a lo que pidió el alumno, marcada como propuesta. Pide UNA aceptación o ajuste. No repitas «qué significa» ni persigas nuevos sinónimos abstractos. No afirmes que ya está aceptada y no añadas umbrales ajenos. Todavía no propongas tareas ni montaje.',
+    goal = {'criterio':'La primera aclaración esencial no bastó. Propón una comprobación concreta, breve y sencilla, fiel al propósito, marcada como propuesta. No reemplaces la vaguedad por «claro», «consistente», «bien presentado» o «formato uniforme» sin detalle necesario. En un reporte de ventas puedes proponer campos concretos y un orden concreto, por ejemplo fecha/producto/importe y fecha de más antigua a más reciente; son opciones a aceptar, no datos ya existentes. Pide UNA aceptación o ajuste. No repitas «qué significa» ni persigas sinónimos. No afirmes aceptación ni añadas umbrales ajenos. Todavía no propongas tareas ni montaje.',
             'habilidades':'Propón una habilidad necesaria para el obstáculo y pide una sola aceptación.',
             'mini':'Primero verifica viabilidad con los datos y cálculos. Si hay brecha real, propón un ajuste calculado y pide UNA decisión. Si es viable, propón mini metas M1... con resultados, fechas y evidencia; pregunta solo si acepta esta propuesta. NO propongas aún tareas ni montaje.',
             'tareas':'Propón el cronograma completo de tareas T1... que habilitan las mini metas ya aceptadas, con fechas reales, minutos por sesión, frecuencia, dependencias y reparto dentro de la disponibilidad. Consolida recurrencias y muestra carga total. Pide UNA aceptación conjunta. No pidas fechas conocidas ni nuevos datos irrelevantes.'}[current]
@@ -182,7 +182,7 @@ def review(client,model,messages,candidate,math_facts,phase,usage):
       'Caminar 5 km o pesar 70 kg con músculos/abdomen marcados y alta energía permiten avanzar; la apariencia admite observación personal. '
       'No exigir poder conversar, porcentaje de grasa, fotografías obligatorias, un límite de café ni otras pruebas no aceptadas. '
       'No reabrir criterios admitidos salvo cambio esencial real; actualizar situación actual no cambia el objetivo. '
-      'En fase criterio permite proponer una comprobación concreta y sencilla fiel al propósito, claramente propuesta y con UNA aceptación o ajuste. No exigir que esa propuesta ya sea un hecho declarado; rechazar solo si se da por aceptada o altera el propósito/umbral. '
+      'En fase criterio permite proponer comprobación fiel al propósito, marcada como propuesta y con UNA aceptación o ajuste. No exigir que ya sea hecho declarado. Rechazar si se da por aceptada, altera propósito/umbral o sigue vaga: «ordenadas de manera consistente» no define el orden; se puede proponer fecha ascendente con campos concretos. '
       'En fase mini exige resultados con fecha y evidencia, no actividades ni cifras elevadas sobre el umbral. '
       'Un documento terminado con contenido y evidencia es un resultado válido; no lo rechaces por ser un entregable. '
       'La pregunta única de aceptación conjunta es obligatoria y correcta: no exigir que el texto público explique esta auditoría interna. '
