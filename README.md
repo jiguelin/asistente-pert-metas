@@ -45,4 +45,4 @@ python -m unittest discover -s tests -v
 
 `test_visual.py` cubre la nueva ruta, cero tareas, tarea compartida, fechas/ciclos, conservación de listas, montaje sin IA después de aceptar, PDF e importación. `test_streamlit.py` verifica autenticación, rotación, reintento y conservación del historial con API simulada. Las pruebas históricas siguen verificando importaciones y módulos antiguos.
 
-Las pruebas anteriores de 30 primeras respuestas simultáneas no certifican 30 conversaciones completas con la nueva versión. La disponibilidad del servicio, límites de API, uso simultáneo y permisos del micrófono en cada teléfono requieren validación separada; no se afirma capacidad para 100 alumnos.
+La prueba final de esta versión completó 30/30 propuestas y cierres con PDF en sesiones simultáneas; detalles y límites en `QA_VISUAL.md`. No se afirma capacidad para 100 alumnos ni latencia garantizada. Los permisos del micrófono y la función Compartir dependen del teléfono.

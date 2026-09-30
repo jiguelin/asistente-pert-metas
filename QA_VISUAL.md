@@ -29,10 +29,20 @@ Preguntas sencillas de la entrevista: 4.86–8.38 segundos. Los cierres se calcu
 
 ## Verificación local
 
-106 tests pasaron después de cambiar la ruta activa. Incluyen pruebas heredadas de compatibilidad; ese número no representa 106 conversaciones reales. Las pruebas de la nueva ruta cubren cero tareas, tarea compartida, fechas y ciclos, cobertura de periodos de 1 a 730 días, máximo 3 columnas, MP fuera de columnas, conservación de hechos, importación/PDF y cierre sin API.
+109 tests pasaron después de cambiar la ruta activa. Incluyen pruebas heredadas de compatibilidad; ese número no representa 106 conversaciones reales. Las pruebas de la nueva ruta cubren cero tareas, tarea compartida, fechas y ciclos, cobertura de periodos de 1 a 730 días, máximo 3 columnas, MP fuera de columnas, conservación de hechos, importación/PDF y cierre sin API.
 
 Se renderizaron y revisaron visualmente portada, papelógrafo final y leyenda del PDF. Se comprobó por extracción que los cuatro PDF mantienen todas las etiquetas, detalles y evidencias. No se midieron papelógrafos físicos: el montaje es una guía proporcional y el alumno adapta el espaciado.
 
 ## Límites de la evidencia
 
-No se certifican 30 o 100 conversaciones completas simultáneas con esta versión. La prueba anterior de 30 primeras respuestas no equivale a eso. No se promete exactitud semántica absoluta ni latencia garantizada; las propuestas se presentan al alumno para aceptar o ajustar. El resultado se descarga y comparte manualmente, sin envío automático por correo/WhatsApp.
+La prueba final que se detalla abajo cubre 30 sesiones que aportan todo el cuaderno, reciben la propuesta y aceptan el cierre. No prueba 100 alumnos ni garantiza la latencia futura o todos los diálogos posibles. No se promete exactitud semántica absoluta ni latencia garantizada; las propuestas se presentan al alumno para aceptar o ajustar. El resultado se descarga y comparte manualmente, sin envío automático por correo/WhatsApp.
+
+## Prueba final de carga — versión 7ae5515
+
+Se abrieron 30 sesiones independientes, se esperó a tenerlas listas y se enviaron las solicitudes al mismo tiempo. Ocho casos físicos, ocho financieros, siete empresariales y siete de aprendizaje. Cada sesión aportó los datos del cuaderno y aceptó la propuesta; se descargó su avance, diagnóstico y PDF.
+
+**Resultado: 30/30 rutas y PDF entregados, sin reintento manual del alumno.** Propuestas: 23.41–68.79 segundos. Cierre tras aceptar: 0.38–9.85 segundos. No se cambiaron plataforma, modelo ni plan de hosting para esta prueba. No son garantías de rendimiento futuro.
+
+Las dos rondas previas terminaron 28/30 cada una y permitieron corregir: coincidencias de evidencia sensibles a mayúsculas/puntuación; diagnóstico de precedencia sin IDs/fechas concretos; punto final pegado a fecha ISO; «Ninguno.» que no activaba ausencia de obstáculo principal. Se añadieron regresiones. Las 58 extracciones guardadas de esas dos rondas avanzan ahora a propuesta al reproducirlas con el normalizador corregido. Los dos tipos de caso afectados también se repitieron en vivo con éxito antes de la carga final.
+
+Se revalidaron los 30 planes finales y se comprobó que todos los PDF contienen las etiquetas de todas sus notas. Esto verifica integridad estructural, exportación y comportamiento bajo esa carga; no equivale a una revisión humana exhaustiva de cada afirmación generada en las 30 propuestas.
