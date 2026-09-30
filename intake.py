@@ -231,6 +231,8 @@ def business_windows(f):
 
 def calculations(f, include_calendar=True):
     out=[]
+    if f.get('minutos_semana'):
+        out.append('PRESUPUESTO DE TIEMPO CONFIRMADO (minutos de lunes a domingo): '+f['minutos_semana']+'. Si las duraciones fueron rangos, usa sus mínimos: capacidad conservadora, no tope absoluto. Mantén las excepciones confirmadas: '+f.get('excepciones_tiempo','{}')+'.')
     if f.get('inicio') and f.get('fin'):
         a=date.fromisoformat(f['inicio']);b=date.fromisoformat(f['fin'])
         if b < a:return 'ERROR: fecha límite anterior al inicio.'
