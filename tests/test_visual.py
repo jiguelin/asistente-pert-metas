@@ -53,6 +53,15 @@ class VisualTests(unittest.TestCase):
         f={k:'dato' for k in va.KEYS};f.update(inicio='2026-10-01',fin='2026-10-31')
         self.assertEqual(va.next_stage({'facts':f,'meta_verificable':True}),'propuesta')
         f.pop('principal');self.assertEqual(va.next_stage({'facts':f,'meta_verificable':True}),'principal')
+    def test_multiple_facts_preserve_baseline_and_supports(self):
+        user='Peso 66.5 kg. Energía mediana. Me apoya mi hermana y un courier.'
+        payload={'ambiguedad_esencial':None,'meta_verificable':False,'meta_cambiada':False,'cambio_meta_cita':None,'hechos':[]}
+        for key,value,quote in [('situacion','66.5 kg','66.5 kg'),('situacion','Energía mediana','Energía mediana'),('apoyos','hermana','mi hermana'),('apoyos','courier','un courier')]:
+            payload['hechos'].append({'campo':key,'valor':value,'usuario':0,'cita':quote})
+        f=va.normalize_visual(payload,[user])['facts']
+        self.assertIn('66.5',f['situacion']);self.assertIn('Energía',f['situacion'])
+        self.assertIn('hermana',f['apoyos']);self.assertIn('courier',f['apoyos'])
+
     def test_prompt_bounds_and_strategy(self):
         self.assertLess(len(va.instructions()),8000)
         self.assertIn('obstáculo principal',va.instructions());self.assertIn('No calcules horas',va.instructions())

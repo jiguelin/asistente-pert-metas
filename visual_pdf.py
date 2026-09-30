@@ -53,6 +53,7 @@ def export_visual_pdf(audit):
         if n['para']:text+='\nContribuye a: '+', '.join(n['para'])
         out.append(KeepTogether([_p(text,body),Spacer(1,8)]))
     add('Conexiones importantes',heading)
+    add('Dibuja flechas sólidas para «debe lograrse antes de». Para contribuciones, apoyos y riesgos puedes usar líneas punteadas con esa etiqueta. Mantén separadas las ramas que avanzan en paralelo; no necesitas unir todas las notas.')
     labels={'antes':'debe lograrse antes de','contribuye':'contribuye a','apoyo':'apoya a','riesgo':'puede dificultar'}
     for e in p['conexiones']:add(f"{e['de']} {labels[e['tipo']]} {e['a']}")
     if not p['conexiones']:add('No necesitas flechas de dependencia para esta ruta; las fechas y la explicación indican el avance.')
