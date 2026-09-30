@@ -26,6 +26,7 @@ def load_assistant_revision(signature):
     import pert_core
     import contingencies
     import calendar_compiler
+    import task_proposal
     import progress
     import pdf_export
     import pert_assistant
@@ -34,6 +35,7 @@ def load_assistant_revision(signature):
     importlib.reload(pert_core)
     importlib.reload(contingencies)
     importlib.reload(calendar_compiler)
+    importlib.reload(task_proposal)
     importlib.reload(progress)
     importlib.reload(pdf_export)
     return importlib.reload(pert_assistant)
@@ -41,7 +43,7 @@ def load_assistant_revision(signature):
 
 _source_root = Path(__file__).resolve().parent
 _revision = sha256(b"".join((_source_root / name).read_bytes()
-                          for name in ("motor_pert.py", "pert_core.py", "contingencies.py", "calendar_compiler.py", "intake.py", "pert_assistant.py", "progress.py", "pdf_export.py"))).hexdigest()
+                          for name in ("motor_pert.py", "pert_core.py", "contingencies.py", "calendar_compiler.py", "task_proposal.py", "intake.py", "pert_assistant.py", "progress.py", "pdf_export.py"))).hexdigest()
 _assistant = load_assistant_revision(_revision)
 AssistantError = _assistant.AssistantError
 respond = _assistant.respond

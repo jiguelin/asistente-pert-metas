@@ -16,6 +16,7 @@ from pert_core import PlanError, audit_plan, audit_with_scale, summary
 from intake import SCHEMA as INTAKE_SCHEMA, PROMPT as INTAKE_PROMPT, context, normalize, stage, QUESTIONS, calculations, cash_schedule
 from contingencies import capacity_schedule, compile_replacement
 from calendar_compiler import compile_calendar, semantic_calendar_view
+from task_proposal import SCHEMA as TASK_SCHEMA, prepare_proposal
 
 TRACE = ContextVar("pert_qa_trace", default=None)
 PROGRESS = ContextVar("pert_progress", default=None)
@@ -185,6 +186,24 @@ def _respond(client,model,messages,today_lima,known_facts=None,accepted_goal=Non
             +'\nHechos acreditados del usuario: '+json.dumps(facts,ensure_ascii=False)
             +'\nAmbigüedad esencial: '+str(snapshot['ambiguedad_esencial'])+'\n'+math_facts
             +'\nDevuelve reply breve, máximo unas 450 palabras. finalize=false. Ningún montaje físico, coordenadas, conteos ni instrucciones de pegar. Los números calculados arriba son obligatorios.')
+    structured=current=='tareas' and facts.get('tipo','otro')=='otro'
+    proposal_facts=dict(facts)
+    if structured:
+        for message in reversed(messages):
+            ids=set(re.findall(r'\bM\d+\b',message['content']))
+            if message['role']=='assistant' and ids and not re.search(r'\bT\d+\b',message['content']):
+                proposal_facts['mini_ids']=sorted(ids|{'MP'})
+                break
+        prompt+=('\nEntrega el esquema de tareas, sin reply ni finalize. La aplicación calcula cantidades, cargas y texto para el alumno. '
+                 'No calcules ni escribas totales dentro de detalle. Cada T tiene pasos con minutos cuya suma es su duración. '
+                 'Nunca una T integrada dentro de otra: escribe su checklist en pasos de la misma T. '
+                 'Usa dias semanales 0=lunes..6=domingo para recurrencias, fechas para ejecuciones puntuales adicionales, '
+                 'excluir para omisiones y excepciones para cambiar minutos/pasos de fechas previstas. '
+                 'No dupliques fechas. Requisitos solo si la tarea previa termina antes de empezar la siguiente; '
+                 'orden_sesion para secuencia dentro de cada ejecución. Habilita únicamente IDs M/MP ya aprobados. '
+                 'No des por preparado un documento, una pauta o una copia no declarados: propón su preparación dentro de los pasos y tiempos. '
+                 'Puedes seguir la orientación de un coach ya declarado sin inventar reuniones nuevas ni una pauta previamente aprobada. '
+                 'Preferir dos tareas claras cuando cubran el propósito, agrupando preparación, registro y revisión en sus sesiones.')
     repair=''
     repair_problems=[]
     for attempt in range(TURN_ATTEMPTS):
@@ -193,17 +212,25 @@ def _respond(client,model,messages,today_lima,known_facts=None,accepted_goal=Non
                'criterio':'Preparando una comprobación sencilla…','habilidades':'Preparando una propuesta de habilidad…'}[current]
         _progress(label if attempt==0 else 'Ajustando la propuesta después de revisarla…')
         resp=_create(client,model=model,instructions=prompt+repair,input=messages,
-                     text={"format":{"type":"json_schema","name":"pert_turn","strict":True,"schema":TURN_SCHEMA}},
+                     text={"format":{"type":"json_schema","name":"pert_tasks" if structured else "pert_turn","strict":True,"schema":TASK_SCHEMA if structured else TURN_SCHEMA}},
                      reasoning={"effort":"low"},max_output_tokens=5000,store=False)
         add_usage(usage,resp)
         try:
-            data=json.loads(resp.output_text);reply=data['reply'].strip()
+            data=json.loads(resp.output_text)
+            review_math=math_facts
+            if structured:
+                reply,proposal=prepare_proposal(data,proposal_facts)
+                review_math+='\nLa aplicación ya expandió y validó cada sesión de esta propuesta, sumó sus pasos, comprobó capacidad diaria, dependencias y cantidades. No recalcules estos totales. Revisa significado, inventario de acciones, métodos, evidencia y restricciones personales.'
+            else:reply=data['reply'].strip()
             if not reply or _user_visible_question_count(reply)>1:raise ValueError('Respuesta vacía o varias preguntas')
             _progress('Revisando la propuesta antes de mostrártela…')
-            verdict=review(client,model,messages,reply,math_facts,current,usage)
+            verdict=review(client,model,messages,reply,review_math,current,usage)
             if verdict['ok']:return reply,False,usage
             repair_problems.extend(verdict['problems'])
-            repair='\nREPARA ESTE BORRADOR SIN MOSTRARLO: '+reply+'\nERRORES A CORREGIR SIN REINTRODUCIR ERRORES PREVIOS: '+ '; '.join(dict.fromkeys(repair_problems))
+            repair='\nREPARA ESTE BORRADOR SIN MOSTRARLO: '+(resp.output_text if structured else reply)+'\nERRORES A CORREGIR SIN REINTRODUCIR ERRORES PREVIOS: '+ '; '.join(dict.fromkeys(repair_problems))
+        except PlanError as exc:
+            repair_problems.extend(exc.problems)
+            repair='\nREPARA ESTE JSON SIN MOSTRARLO: '+resp.output_text+'\nERRORES CALCULADOS A CORREGIR: '+'; '.join(dict.fromkeys(repair_problems))
         except (ValueError,TypeError,KeyError):
             repair='\nLa respuesta anterior estuvo incompleta. Genera el JSON completo, breve y con una sola pregunta.'
     raise AssistantError('No pude completar este paso ahora. Tu avance se conserva; puedes reintentar.')

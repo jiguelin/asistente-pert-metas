@@ -144,8 +144,8 @@ class LatencyTests(unittest.TestCase):
         token = assistant.PROGRESS.set(progress.append)
         try:
             with patch.object(assistant, 'extract_intake', return_value=current), \
-                    patch.object(assistant, '_create', return_value=response(
-                        {'reply': proposed, 'finalize': False})) as create, \
+                    patch.object(assistant, '_create', return_value=response({})) as create, \
+                    patch.object(assistant, 'prepare_proposal', return_value=(proposed, {})) as prepare, \
                     patch.object(assistant, 'review', return_value={
                         'ok': True, 'problems': []}) as review:
                 reply, finalize, _ = assistant.respond(
@@ -156,9 +156,11 @@ class LatencyTests(unittest.TestCase):
         self.assertEqual(reply, proposed)
         self.assertFalse(finalize)
         self.assertEqual(create.call_count, 1)
+        self.assertEqual(prepare.call_count, 1)
         self.assertEqual(review.call_args.args[5], 'tareas')
         self.assertNotIn('Fechas y días reales:', review.call_args.args[4])
         self.assertIn('31 días inclusivos', review.call_args.args[4])
+        self.assertIn('Cantidad de días reales:', review.call_args.args[4])
         self.assertIn(current['facts']['minutos_semana'], create.call_args.kwargs['instructions'])
         self.assertEqual(progress, [
             'Leyendo tu respuesta…', 'Preparando tus tareas y horarios…',
