@@ -30,6 +30,9 @@ def load_assistant_revision(signature):
     import progress
     import pdf_export
     import pert_assistant
+    import visual_plan
+    import visual_pdf
+    import visual_assistant
     importlib.reload(intake)
     importlib.reload(motor_pert)
     importlib.reload(pert_core)
@@ -38,12 +41,15 @@ def load_assistant_revision(signature):
     importlib.reload(task_proposal)
     importlib.reload(progress)
     importlib.reload(pdf_export)
-    return importlib.reload(pert_assistant)
+    importlib.reload(pert_assistant)
+    importlib.reload(visual_plan)
+    importlib.reload(visual_pdf)
+    return importlib.reload(visual_assistant)
 
 
 _source_root = Path(__file__).resolve().parent
 _revision = sha256(b"".join((_source_root / name).read_bytes()
-                          for name in ("motor_pert.py", "pert_core.py", "contingencies.py", "calendar_compiler.py", "task_proposal.py", "intake.py", "pert_assistant.py", "progress.py", "pdf_export.py"))).hexdigest()
+                          for name in ("motor_pert.py", "pert_core.py", "contingencies.py", "calendar_compiler.py", "task_proposal.py", "intake.py", "pert_assistant.py", "progress.py", "pdf_export.py", "visual_plan.py", "visual_pdf.py", "visual_assistant.py", "resources/INSTRUCTIONS_APP.txt", "resources/GUIA_OPERATIVA_PERT_FISICO.txt"))).hexdigest()
 _assistant = load_assistant_revision(_revision)
 AssistantError = _assistant.AssistantError
 respond = _assistant.respond
@@ -67,7 +73,7 @@ if not event_password:
     st.stop()
 
 st.title("Tu meta, hecha plan")
-st.caption("Asistente PERT Chart de Metas · una pregunta a la vez")
+st.caption("Asistente PERT Chart de Metas · tu mapa visual, paso a paso")
 if st.query_params.get("qa") == "1":
     st.caption("__QA_RUN__:" + st.query_params.get("qa_run_id", ""))
 
@@ -151,7 +157,7 @@ with st.sidebar:
     st.caption("Guarda el avance antes de cerrar o actualizar la página.")
 
 if not st.session_state.messages:
-    st.info("¿Cuál es tu Meta Principal? Puedes escribir o tocar el micrófono y hablar.")
+    st.info("Ten a mano tu cuaderno del taller. Ordenaremos tu ruta, con mini metas y acciones importantes. ¿Cuál es tu Meta Principal? Puedes escribir o tocar el micrófono y hablar.")
 
 for msg in st.session_state.messages:
     with st.chat_message(msg["role"]):

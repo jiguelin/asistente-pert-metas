@@ -37,6 +37,9 @@ def _p(value: object, style: ParagraphStyle) -> Paragraph:
 
 
 def export_pdf(audit: dict) -> bytes:
+    if audit.get("plan", {}).get("modo") == "visual":
+        from visual_pdf import export_visual_pdf
+        return export_visual_pdf(audit)
     plan, motor = audit["plan"], audit["motor"]
     font = _font()
     base = getSampleStyleSheet()

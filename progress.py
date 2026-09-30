@@ -39,7 +39,11 @@ def import_progress(raw: bytes) -> dict[str, Any]:
         if not isinstance(final, dict) or "plan" not in final:
             raise ValueError("Plan inválido en el avance")
         # Never trust a saved ok flag or old coordinates.
-        final = audit_plan(final["plan"])
+        if final["plan"].get("modo") == "visual":
+            from visual_plan import audit_visual
+            final = audit_visual(final["plan"])
+        else:
+            final = audit_plan(final["plan"])
     pending = data.get('pending_text')
     if pending is not None and (not isinstance(pending, str) or len(pending) > 12000):
         raise ValueError('Mensaje pendiente inválido')
