@@ -176,11 +176,11 @@ def _respond(client,model,messages,today_lima,known_facts=None,accepted_goal=Non
             n=(date.fromisoformat(facts['fin'])-date.fromisoformat(facts['inicio'])).days+1
             reply=f"Del {facts['inicio']} al {facts['fin']} son {n} días inclusivos. La escala es provisional y la ajustaré al revisar el montaje.\n\n"+reply
         return reply,False,usage
-    math_facts=calculations(facts,include_calendar=current=='tareas')
+    math_facts=calculations(facts,include_calendar=False)
     goal = {'criterio':'La primera aclaración esencial no bastó. Propón una comprobación concreta, breve y sencilla, fiel al propósito, marcada como propuesta. No reemplaces la vaguedad por «claro», «consistente», «bien presentado» o «formato uniforme» sin detalle necesario. En un reporte de ventas puedes proponer campos concretos y un orden concreto, por ejemplo fecha/producto/importe y fecha de más antigua a más reciente; son opciones a aceptar, no datos ya existentes. Pide UNA aceptación o ajuste. No repitas «qué significa» ni persigas sinónimos. No afirmes aceptación ni añadas umbrales ajenos. Todavía no propongas tareas ni montaje.',
             'habilidades':'Propón una habilidad necesaria para el obstáculo y pide una sola aceptación.',
             'mini':'Primero verifica viabilidad con los datos y cálculos. Si hay brecha real, propón un ajuste calculado y pide UNA decisión. Si es viable, propón mini metas M1... con resultados, fechas y evidencia; pregunta solo si acepta esta propuesta. NO propongas aún tareas ni montaje.',
-            'tareas':'Propón tareas T1... que habilitan las mini metas aceptadas. Describe recurrencias de forma compacta: intervalo exacto, días confirmados, excepciones, minutos por sesión, cantidad de sesiones y carga total. No enumeres cientos de fechas ni las repitas por hito: la aplicación las expandirá en el plan final. Define preparación, revisión, dependencias y reparto dentro de la disponibilidad. Distingue horarios propuestos de hechos aceptados. Pide UNA aceptación conjunta. No pidas datos conocidos ni añadas requisitos.'}[current]
+            'tareas':'Propón hasta seis tareas T1... que habilitan las mini metas aceptadas. Describe recurrencias de forma compacta: intervalo exacto, días confirmados, excepciones, minutos por sesión, cantidad de sesiones y carga total. No enumeres cientos de fechas ni las repitas por hito: la aplicación las expandirá en el plan final. Define preparación, revisión, dependencias y reparto dentro de la disponibilidad. Distingue horarios propuestos de hechos aceptados. Termina exactamente con: ¿Aceptas esta propuesta de tareas y horarios? No pidas datos conocidos ni añadas requisitos.'}[current]
     prompt=(_instructions(current)+f'\nFecha local Lima: {today_lima}. ETAPA OBLIGATORIA: {current}.\n'+goal
             +'\nHechos acreditados del usuario: '+json.dumps(facts,ensure_ascii=False)
             +'\nAmbigüedad esencial: '+str(snapshot['ambiguedad_esencial'])+'\n'+math_facts
@@ -194,7 +194,7 @@ def _respond(client,model,messages,today_lima,known_facts=None,accepted_goal=Non
         _progress(label if attempt==0 else 'Ajustando la propuesta después de revisarla…')
         resp=_create(client,model=model,instructions=prompt+repair,input=messages,
                      text={"format":{"type":"json_schema","name":"pert_turn","strict":True,"schema":TURN_SCHEMA}},
-                     reasoning={"effort":"medium"},max_output_tokens=8000,store=False)
+                     reasoning={"effort":"low"},max_output_tokens=5000,store=False)
         add_usage(usage,resp)
         try:
             data=json.loads(resp.output_text);reply=data['reply'].strip()

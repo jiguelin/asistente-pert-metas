@@ -157,7 +157,8 @@ class LatencyTests(unittest.TestCase):
         self.assertFalse(finalize)
         self.assertEqual(create.call_count, 1)
         self.assertEqual(review.call_args.args[5], 'tareas')
-        self.assertIn('2026-10-04 domingo', review.call_args.args[4])
+        self.assertNotIn('Fechas y días reales:', review.call_args.args[4])
+        self.assertIn('31 días inclusivos', review.call_args.args[4])
         self.assertIn(current['facts']['minutos_semana'], create.call_args.kwargs['instructions'])
         self.assertEqual(progress, [
             'Leyendo tu respuesta…', 'Preparando tus tareas y horarios…',
