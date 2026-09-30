@@ -204,6 +204,9 @@ def _respond(client,model,messages,today_lima,known_facts=None,accepted_goal=Non
                  'Si solo hay un checklist de la misma tarea, orden_sesion=[], y las acciones ordenadas van en pasos. '
                  'Habilita únicamente IDs M/MP ya aprobados. '
                  'No des por preparado un documento, una pauta o una copia no declarados: propón su preparación dentro de los pasos y tiempos. '
+                 'Nunca digas «tu plan», «pauta ya trabajada» o «según plan» si no consta uno. Usa orientación del apoyo declarado como método propuesto. '
+                 'Incluye en el reparto la comprobación de peso/apariencia/energía u otra evidencia aceptada en CADA fecha de M y MP, aunque no coincida con el día usual de registro. '
+                 'No encadenes entrenamiento y alimentación solo porque uno sucede por la mañana: si no hay dependencia causal, ambos requisitos y orden_sesion son []. '
                  'Puedes seguir la orientación de un coach ya declarado sin inventar reuniones nuevas ni una pauta previamente aprobada. '
                  'Preferir dos tareas claras cuando cubran el propósito, agrupando preparación, registro y revisión en sus sesiones.')
     repair=''
@@ -292,6 +295,7 @@ def review(client,model,messages,candidate,math_facts,phase,usage):
       'Revisar gastos de un mes ya pagado no equivale a restarlos otra vez; rechaza solo si realmente recalcula o exige ese gasto adicional. '
       'En tareas acepta recurrencias compactas con rango exacto, días/excepciones confirmados, minutos por sesión, cantidad y carga total. No exigir cientos de fechas enumeradas: se expanden y validan en final. Rechaza días o disponibilidad inventados y tareas duplicadas. '
       'Cuando el alumno da rangos de duración, la capacidad calculada usa sus mínimos para planificar con margen. 45–60 minutos más 30–45 permite planificar 75, aunque el máximo posible sea 105. Esto es un presupuesto conservador válido, no una disponibilidad inventada. No exigir consumir el máximo. No es obligatorio crear una tarea nueva por cada apoyo: un coach puede ser recurso de las tareas existentes. '
+      'En fase tareas no exigir repetir situación, obstáculos, habilidades ni cada apoyo ya acreditado: la aplicación los conserva para el inventario final. Su ausencia en una propuesta breve de tareas no los borra. Con un coach declarado, una rutina guiada propuesta es un método válido; no exige un documento previo ni aprobar una pauta nueva. Rechaza solo si afirma que una pauta/documento YA estaba preparado o trabajado sin que conste. '
       'En final puede recibir reglas compactas y un resumen de sesiones calculado por Python en vez de cientos de fechas. El código ya expandió cada fecha y validó capacidad y dependencias; conserva la revisión del significado, completitud, frecuencia aprobada y evidencia. No exigir enumeración redundante ni recalcular totales validados. '
       'En español usa fechas ISO o día/mes/año. Nunca mes/día: 10/04 no puede representar el 4 de octubre. '
       'En final verifica coherencia semántica de TODO el plan: inventario aprobado completo, evidencia autónoma, '
