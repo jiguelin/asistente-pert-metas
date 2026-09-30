@@ -1,4 +1,4 @@
-GUIA OPERATIVA DEL PERT CHART FISICO — VERSION 8 (APP)
+GUIA OPERATIVA DEL PERT CHART FISICO — VERSION 9 (APP)
 Taller de Metas y Planificación Estratégica
 
 CONTROL DE SALIDA: comprobar también el texto FINAL, no solo el plan cargado.
@@ -25,7 +25,8 @@ Todos son un CUARTO del post-it normal, salvo Meta Principal grande amarilla. Es
 Papelógrafos horizontales y plumón; si hacen falta varios, unirlos de izquierda a derecha. El tiempo aumenta hacia la derecha.
 
 3. META Y AMBIGÜEDAD
-Cada componente esencial necesita una condición de logro observable. Volver a revisar después de cada aclaración, preguntando solo por ambigüedades que cambien qué cuenta como lograr la meta. «Caminar 5 km seguidos con buena energía» ya permite comprobar los 5 km: no imponer una medición adicional de energía o ánimo. «Reporte profesional» sin descripción sí requiere definir contenido y comprobación. No cambiar el propósito ni añadir métricas ajenas.
+Distinguir condiciones esenciales de valoraciones personales. Con un resultado observable, energía, entusiasmo, felicidad o confianza se conservan sin exigir definición ni métrica. «Caminar 5 km con buena energía» y «pesar 70 kg con músculos y abdomen marcados y alta energía» permiten avanzar; la apariencia puede comprobarse por observación personal. No imponer porcentaje de grasa, fotografías ni límites de café. Una cifra o fecha cualquiera no resuelve criterios esenciales de un entregable: «reporte profesional de 10 páginas» todavía puede necesitar contenido y comprobación.
+Revisar nuevas ambigüedades esenciales dentro de aclaraciones, pero no perseguir sinónimos de ánimo («pilas», «entusiasmado», «feliz»). Conservar la verificación admitida y reabrirla solo ante cambio esencial real del alumno; actualizar peso actual, apoyos o disponibilidad no modifica la meta. Una aclaración esencial que sigue vaga requiere una propuesta sencilla de comprobación y una aceptación, no otra cadena de definiciones abstractas. Al retomar, reconstruir esta decisión a partir de la conversación completa. No aprobar automáticamente por agotar preguntas.
 Registrar: texto fiel, criterios de aceptación, evidencia y fecha límite. El post-it puede llevar texto breve y un ID que remita a una leyenda con todos los criterios; no perder componentes al abreviar.
 No usar “correcto”, “profesional”, “establecido” o “rentable” como criterio suficiente sin comprobación definida. No pedir precisión irrelevante para ejecutar o verificar la meta.
 
@@ -122,7 +123,7 @@ En cada cobro de fin de mes, separar los gastos del mes siguiente antes de llama
 Para una entrega normal con posible reposición, calcular hacia atrás desde el último día de entrega hábil antes del límite. Respetar recogida, tránsito, llegada del reemplazo, empaque nuevo, reenvío y comprobación final. Todos los cobros normales preceden a sus envíos; la fecha de un hito es un límite, no permiso para cobrar después del último envío. Las tareas variables necesitan cantidades, fechas y minutos concretos.
 
 16. ACLARACIONES DE LA META
-Revisar cada respuesta de aclaración. Profesional, bien presentado u ordenado sin característica observable no se resuelven sustituyéndolos por otras palabras vagas. Pedir una sola característica concreta. No proponer nuevos requisitos ni pedir aceptar un criterio aún impreciso. Caminar 5 km con buena energía ya ofrece una cantidad observable; no exige definir energía.
+Revisar cada aclaración solo por condiciones esenciales. Profesional, bien presentado u ordenado pueden requerir contenido o comprobación concreta. Tras una aclaración insuficiente, ayudar con una propuesta sencilla y fiel al propósito; pedir una aceptación o ajuste, sin darla por aceptada ni añadir umbrales. No reemplazar vaguedad por vaguedad. Con resultado observable, energía, entusiasmo y felicidad se conservan sin interrogarlas. Una meta admitida no se reabre por esos sinónimos ni cambios de situación actual.
 
 
 17. CONTINGENCIAS Y DISPONIBILIDAD REAL

@@ -88,7 +88,7 @@ def _create(client: OpenAI, _stream_retry=True, **kwargs: Any):
 
 
 def respond(client: OpenAI, model: str, messages: list[dict[str, str]],
-            today_lima: str, known_facts=None) -> tuple[str, bool, dict]:
+            today_lima: str, known_facts=None, accepted_goal=None) -> tuple[str, bool, dict]:
     if not messages:
         return "¿Cuál es tu Meta Principal?", False, {}
     if len(messages) == 1 and "revis" in messages[0]["content"].lower() \
@@ -96,17 +96,22 @@ def respond(client: OpenAI, model: str, messages: list[dict[str, str]],
             and len(messages[0]["content"]) < 90:
         return "¿Puedes compartir el PERT que ya empezaste?", False, {}
     usage={"input_tokens":0,"output_tokens":0}
-    snapshot = extract_intake(client, model, messages, today_lima, usage, known_facts)
+    snapshot = extract_intake(client, model, messages, today_lima, usage, known_facts, accepted_goal)
     usage['snapshot']=snapshot
     current=stage(snapshot); facts=snapshot['facts']
     if current=='final':return 'Estoy verificando tu plan completo.',True,usage
     if current=='criterio':
-        term=str(snapshot.get('ambiguedad_esencial') or '').strip()
-        if term and len(term)<=100 and not any(c in term for c in ['?','¿','\n']) and any(term.casefold() in m['content'].casefold() for m in messages if m['role']=='user'):
-            reply=f'Para poder comprobar la meta, ¿qué característica concreta debe cumplirse cuando dices «{term}»?'
-        else:
-            reply='¿Qué resultado observable te permitirá comprobar que lograste tu meta?'
-        return reply,False,usage
+        already_asked=(not snapshot.get('meta_cambiada') and any(
+            m['role']=='assistant' and (
+                m['content'].startswith('Para poder comprobar la meta,') or
+                m['content'].startswith('¿Qué resultado observable')) for m in messages))
+        if not already_asked:
+            term=str(snapshot.get('ambiguedad_esencial') or '').strip()
+            if term and len(term)<=100 and not any(c in term for c in ['?','¿','\n']) and any(term.casefold() in m['content'].casefold() for m in messages if m['role']=='user'):
+                reply=f'Para poder comprobar la meta, ¿qué característica concreta debe cumplirse cuando dices «{term}»?'
+            else:
+                reply='¿Qué resultado observable te permitirá comprobar que lograste tu meta?'
+            return reply,False,usage
     if current in QUESTIONS and not (current=='habilidades' and 'no sé' in messages[-1]['content'].lower()):
         reply=QUESTIONS[current]
         if current=='situacion':
@@ -115,7 +120,7 @@ def respond(client: OpenAI, model: str, messages: list[dict[str, str]],
             reply=f"Del {facts['inicio']} al {facts['fin']} son {n} días inclusivos. La escala es provisional y la ajustaré al revisar el montaje.\n\n"+reply
         return reply,False,usage
     math_facts=calculations(facts)
-    goal = {'criterio':'Aclara únicamente la ambigüedad esencial indicada, con UNA pregunta. No añadas requisitos.',
+    goal = {'criterio':'La primera aclaración esencial no bastó. Ayuda proponiendo una comprobación concreta, breve y sencilla, fiel a lo que pidió el alumno, marcada como propuesta. Pide UNA aceptación o ajuste. No repitas «qué significa» ni persigas nuevos sinónimos abstractos. No afirmes que ya está aceptada y no añadas umbrales ajenos. Todavía no propongas tareas ni montaje.',
             'habilidades':'Propón una habilidad necesaria para el obstáculo y pide una sola aceptación.',
             'mini':'Primero verifica viabilidad con los datos y cálculos. Si hay brecha real, propón un ajuste calculado y pide UNA decisión. Si es viable, propón mini metas M1... con resultados, fechas y evidencia; pregunta solo si acepta esta propuesta. NO propongas aún tareas ni montaje.',
             'tareas':'Propón el cronograma completo de tareas T1... que habilitan las mini metas ya aceptadas, con fechas reales, minutos por sesión, frecuencia, dependencias y reparto dentro de la disponibilidad. Consolida recurrencias y muestra carga total. Pide UNA aceptación conjunta. No pidas fechas conocidas ni nuevos datos irrelevantes.'}[current]
@@ -147,15 +152,17 @@ def add_usage(usage,resp):
         for k in ['input_tokens','output_tokens']:usage[k]+=getattr(resp.usage,k,0)
 
 
-def extract_intake(client,model,messages,today,usage,known_facts=None):
+def extract_intake(client,model,messages,today,usage,known_facts=None,accepted_goal=None):
     users, transcript=context(messages)
     for _ in range(2):
-        resp=_create(client,model=model,instructions=INTAKE_PROMPT+f'\nHoy en Lima: {today}.',
+        continuity=('\nMeta ya verificada en esta conversación: '+json.dumps(accepted_goal,ensure_ascii=False)
+                    if accepted_goal else '')
+        resp=_create(client,model=model,instructions=INTAKE_PROMPT+f'\nHoy en Lima: {today}.'+continuity,
                      input=transcript,text={"format":{"type":"json_schema","name":"pert_intake","strict":True,"schema":INTAKE_SCHEMA}},
                      reasoning={"effort":"low"},max_output_tokens=8000,store=False)
         add_usage(usage,resp)
         try:
-            snapshot=normalize(json.loads(resp.output_text),users,known_facts)
+            snapshot=normalize(json.loads(resp.output_text),users,known_facts,accepted_goal)
             if snapshot['meta_verificable'] and 'meta' not in snapshot['facts']:
                 continue
             return snapshot
@@ -171,8 +178,11 @@ def review(client,model,messages,candidate,math_facts,phase,usage):
     instructions=('Control de calidad INTERNO para alumnos principiantes. Revisa el borrador contra la realidad aportada. '
       'Devuelve ok=false con errores concretos si inventa datos o criterios, cambia la meta, contradice los cálculos, '
       'pide varios datos, repite preguntas ya resueltas, omite una restricción o entrega montaje sin validar. '
-      'NO pidas perfección irrelevante ni métricas de energía si caminar 5 km ya es observable. '
-      'Conserva buena energía en el texto como preferencia; no exigir poder conversar, ir más rápido ni otras pruebas no pedidas. '
+      'Con un resultado observable, energía, ánimo, entusiasmo y felicidad son preferencias personales: conservarlas sin métricas ni aclaraciones en cadena. '
+      'Caminar 5 km o pesar 70 kg con músculos/abdomen marcados y alta energía permiten avanzar; la apariencia admite observación personal. '
+      'No exigir poder conversar, porcentaje de grasa, fotografías obligatorias, un límite de café ni otras pruebas no aceptadas. '
+      'No reabrir criterios admitidos salvo cambio esencial real; actualizar situación actual no cambia el objetivo. '
+      'En fase criterio permite proponer una comprobación concreta y sencilla fiel al propósito, claramente propuesta y con UNA aceptación o ajuste. No exigir que esa propuesta ya sea un hecho declarado; rechazar solo si se da por aceptada o altera el propósito/umbral. '
       'En fase mini exige resultados con fecha y evidencia, no actividades ni cifras elevadas sobre el umbral. '
       'Un documento terminado con contenido y evidencia es un resultado válido; no lo rechaces por ser un entregable. '
       'La pregunta única de aceptación conjunta es obligatoria y correcta: no exigir que el texto público explique esta auditoría interna. '

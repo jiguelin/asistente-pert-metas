@@ -1,12 +1,18 @@
 # Asistente PERT Chart de Metas — app para el taller
 
-**Estado:** validación funcional aprobada en los cuatro casos (salud, finanzas, empresa y aprendizaje), con PDF completo y revisado. Las 37 pruebas locales pasan, también desde una copia independiente; 30 primeras solicitudes simultáneas a IA real respondieron correctamente. Disponible para uso individual y piloto del taller. No se han probado micrófonos/permisos en teléfonos reales ni30 cierres complejos simultáneos.
+**Estado:** validación funcional aprobada en los cuatro casos (salud, finanzas, empresa y aprendizaje), con PDF completo y revisado. Las 49 pruebas locales pasan, también desde una copia independiente; 30 primeras solicitudes simultáneas a IA real respondieron correctamente. Disponible para uso individual y piloto del taller. No se han probado micrófonos/permisos en teléfonos reales ni30 cierres complejos simultáneos.
 
 Las cuatro entrevistas iniciales fueron nuevas; las regresiones finales reutilizaron sus avances aprobados. El cierre empresarial necesitó tres borradores internos y unos10 minutos. El alumno ve únicamente el resultado que pasa los controles; el indicador muestra tiempo de espera.
 
+## Corrección de aclaraciones (septiembre de 2026)
+
+La meta verificada se conserva durante la conversación. Se revisa de nuevo solo ante un cambio esencial atribuido al último mensaje del alumno, no por sinónimos de ánimo ni cambios de situación actual. Energía, entusiasmo o felicidad junto a un resultado observable se mantienen como valoraciones personales sin métricas impuestas. Si una aclaración esencial no basta, el asistente propone una comprobación sencilla para aceptar, en vez de repetir definiciones abstractas. Los avances importados se reevalúan a partir de su historial completo; no se confía en un certificado de meta escrito en el archivo.
+
+Las regresiones nuevas simulan extractores inconsistentes para comprobar el control de continuidad; por sí solas no prueban comprensión de un modelo real.
+
 ## Qué hace
 
-- Chat con una sola pregunta por turno, basado en INSTRUCTIONS_APP.txt y la guía operativa v8, con registro de hechos acreditados y secuencia controlada.
+- Chat con una sola pregunta por turno, basado en INSTRUCTIONS_APP.txt y la guía operativa v9, con registro de hechos acreditados y secuencia controlada.
 - Entrada de texto o grabación desde el micrófono; la respuesta es escrita.
 - El asistente propone mini metas y tareas. Antes del montaje final, genera un plan estructurado y ejecuta `motor_pert.verificar(plan)`; si falla, no lo declara definitivo.
 - Descarga el resultado completo en PDF y el avance en JSON. Tras cerrar o recargar, el alumno puede volver a importar su JSON.
@@ -53,4 +59,4 @@ El modelo de planificación por defecto es gpt-5.4. Se configura con PERT_MODEL;
 
 ## Archivos de referencia
 
-`resources/SKILL.md` y `EJEMPLOS_CALIDAD_PERT.txt` conservan el paquete 0.3.6 como referencia. La app usa `INSTRUCTIONS_APP.txt` (7558 caracteres) y la guía operativa v8 adaptada a la API. El PDF `Paso_10.pdf` proviene del material del taller. `motor_pert.py` proviene de la copia local auditada del verificador v4; el ZIP de distribución 0.3.6 no lo incluía. Antes de publicar, comparar con la versión del verificador instalada en el complemento privado si puede leerse.
+`resources/SKILL.md` y `EJEMPLOS_CALIDAD_PERT.txt` conservan el paquete 0.3.6 como referencia. La app usa `INSTRUCTIONS_APP.txt` (7897 caracteres) y la guía operativa v9 adaptada a la API. El PDF `Paso_10.pdf` proviene del material del taller. `motor_pert.py` proviene de la copia local auditada del verificador v4; el ZIP de distribución 0.3.6 no lo incluía. Antes de publicar, comparar con la versión del verificador instalada en el complemento privado si puede leerse.

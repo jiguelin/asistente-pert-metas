@@ -95,6 +95,7 @@ transcription_model = secret("TRANSCRIPTION_MODEL", "gpt-transcribe")
 audio_seconds_limit = int(secret("MAX_AUDIO_SECONDS", 90))
 st.session_state.setdefault("qa_trace", [])
 st.session_state.setdefault("known_facts", {})
+st.session_state.setdefault("accepted_goal", None)
 st.session_state.setdefault("messages", [])
 st.session_state.setdefault("final", None)
 st.session_state.setdefault("usage", {"input_tokens": 0, "output_tokens": 0, "audio_seconds": 0.0})
@@ -110,6 +111,7 @@ with st.sidebar:
         st.session_state.pending_text = None
         st.session_state.last_error = None
         st.session_state.known_facts = {}
+        st.session_state.accepted_goal = None
         st.session_state.usage = {"input_tokens": 0, "output_tokens": 0, "audio_seconds": 0.0}
         st.rerun()
     try:
@@ -133,6 +135,9 @@ with st.sidebar:
                 st.session_state.pending_text = loaded['pending_text']
                 st.session_state.last_error = None
                 st.session_state.known_facts = {}
+                # Imported files are untrusted. Reconstruct the goal decision
+                # from the complete transcript under the current intake rules.
+                st.session_state.accepted_goal = None
                 st.session_state.loaded_fingerprint = fingerprint
                 st.rerun()
             except ValueError as exc:
@@ -208,9 +213,11 @@ try:
             _assistant.TRACE.set(st.session_state.qa_trace if st.query_params.get("qa") == "1" else None)
             reply, finalize, usage = respond(client, model, st.session_state.messages,
                                              datetime.now(ZoneInfo("America/Lima")).date().isoformat(),
-                                             known_facts=st.session_state.known_facts)
+                                             known_facts=st.session_state.known_facts,
+                                             accepted_goal=st.session_state.accepted_goal)
             if usage.get('snapshot'):
                 st.session_state.known_facts = usage['snapshot']['facts']
+                st.session_state.accepted_goal = usage['snapshot'].get('goal_validation')
             for key in ("input_tokens", "output_tokens"):
                 st.session_state.usage[key] += usage.get(key, 0)
             if finalize:

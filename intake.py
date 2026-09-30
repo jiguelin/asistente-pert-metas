@@ -9,11 +9,13 @@ KEYS = '''meta criterio inicio fin situacion obstaculos principal habilidades ap
 SCHEMA = {"type":"object","properties":{
     "ambiguedad_esencial":{"type":["string","null"]},
     "meta_verificable":{"type":"boolean"},
+    "meta_cambiada":{"type":"boolean"},
+    "cambio_meta_cita":{"type":["string","null"]},
     "hechos":{"type":"array","items":{"type":"object","properties":{
         "campo":{"type":"string","enum":KEYS},"valor":{"type":"string"},
         "usuario":{"type":"integer"},"cita":{"type":"string"}},
         "required":["campo","valor","usuario","cita"],"additionalProperties":False}}
-},"required":["ambiguedad_esencial","meta_verificable","hechos"],"additionalProperties":False}
+},"required":["ambiguedad_esencial","meta_verificable","meta_cambiada","cambio_meta_cita","hechos"],"additionalProperties":False}
 
 PROMPT = '''Extrae datos para un PERT físico, sin redactar respuesta al alumno ni hacer planes.
 Usa SOLO hechos declarados por el usuario o propuestas concretas que este aceptó.
@@ -42,16 +44,31 @@ Si están declarados: entrega_habiles y reposicion_habiles son números de días
 entrega_lun_vie=true solo con entregas de lunes a viernes; recogida_sabados=true
 solo si recoge sábados. False solo si se excluyen explícitamente; no inventar horarios.
 Un gasto ya pagado en el mes inicial NO se vuelve a restar. Una reserva no elimina un costo.
-Meta verificable: hay resultado observable, cantidad o evidencia suficiente. Aclara solo
-ambigüedad ESENCIAL que cambia la verificación. «Caminar 5 km con buena energía»
-ya es verificable; energía no exige otra métrica. «Reporte profesional» solo, no lo es.
+Meta verificable: hay resultado observable, cantidad o evidencia suficiente. Distingue
+criterios ESENCIALES de preferencias personales. Con un resultado observable, energía,
+ánimo, entusiasmo, felicidad o confianza son valoraciones del alumno: consérvalas,
+pero no exijas definirlas ni medirlas. «Caminar 5 km con buena energía» y «pesar 70 kg
+con músculos y abdomen marcados y alta energía» permiten avanzar. Apariencia marcada
+admite observación personal; al proponer hitos ofrece evidencia sencilla, sin imponer
+porcentaje de grasa, pruebas clínicas ni fotografías obligatorias. No persigas sinónimos
+«alta energía»→«pilas»→«entusiasmado»→«feliz». Tampoco impongas un límite de café.
+Una cifra o fecha cualquiera NO hace verificable todo: «reporte profesional de 10 páginas»
+todavía puede necesitar contenido y comprobación. «Sentirme con alta energía» como única
+meta necesita UNA aclaración útil del logro, proponiendo una comprobación sencilla.
 ambiguedad_esencial: solo el término o frase LITERAL del usuario que impide verificar,
 sin explicación. Revisar también la última aclaración: «bien presentado» u «ordenado»
 sin característica observable no resuelven «profesional».
-Si la última aclaración introduce nuevas palabras vagas, señala una de ellas como
-ambiguedad_esencial (por ejemplo «bien presentado»), en vez de repetir el término original.
+Si la última aclaración introduce una nueva vaguedad ESENCIAL, señala una de ellas;
+no confundas sensaciones, preferencias o respuestas a una pregunta innecesaria con
+una nueva condición esencial. Una meta ya admitida no se reabre por nuevos sinónimos.
 No acreditar definiciones vagas sugeridas por el asistente. No confundir preferencias
 de estilo con criterios esenciales.
+meta_cambiada=true SOLO si el ÚLTIMO usuario solicita cambiar un resultado o criterio
+esencial, lo contradice o añade una condición indispensable que obliga a revisarlo.
+cambio_meta_cita: cita literal corta de ese ÚLTIMO mensaje, o null si no hay cambio.
+Actualizar peso actual, disponibilidad, apoyos, fechas o explicar sensaciones no cambia
+el objetivo. Reescribir la meta al extraerla tampoco. Si ya se pasó a situación, obstáculos,
+habilidades o apoyos, no retroceder a criterio por preferencias sin cambio esencial real.
 criterio: conserva los requisitos reales sin añadir otros. habilidades son las necesarias
 para superar el obstáculo, no convertir situación actual en una habilidad futura.
 «Ningún obstáculo» / «ningún apoyo» son hechos válidos. No inferir principal de una lista.
@@ -75,21 +92,42 @@ def context(messages):
     return users,'\n'.join(lines)
 
 
-def normalize(payload, users, known_facts=None):
+def normalize(payload, users, known_facts=None, accepted_goal=None):
     facts={k:v for k,v in (known_facts or {}).items()
            if k not in ['mini_aprobadas','tareas_aprobadas']}
+    clean=lambda text: ' '.join(unicodedata.normalize('NFKC',text).split())
     for h in payload['hechos']:
         i=h['usuario'];q=h['cita']
         # Source text is authoritative; a mistaken message index must not
         # erase a fact when its literal quotation exists in the transcript.
-        clean=lambda text: ' '.join(unicodedata.normalize('NFKC',text).split())
         if q and any(clean(q) in clean(user) for user in users):
             facts[h['campo']]=h['valor']
     if 'situacion' not in facts and facts.get('tipo')=='ahorro' and all(k in facts for k in ['saldo','ingreso','gasto']):
         facts['situacion']=f"Saldo libre {facts['saldo']}; ingreso mensual {facts['ingreso']}; gasto mensual {facts['gasto']}."
     if facts.get('obstaculos','').strip().lower() in ['ninguno','ningún obstáculo','no tengo obstáculos']:
         facts.setdefault('principal','ninguno')
-    return {**payload,'facts':facts}
+    # A verification decision belongs to this goal, not to each new turn's
+    # wording. Reopen only on a changed requirement attributable to the latest
+    # student message; an old quote or an extractor paraphrase is insufficient.
+    quote=payload.get('cambio_meta_cita')
+    changed=(payload.get('meta_cambiada') is True and isinstance(quote,str)
+             and bool(quote.strip()) and bool(users)
+             and clean(quote) in clean(users[-1]))
+    result={**payload,'facts':facts,'meta_cambiada':changed}
+    if changed:
+        facts.pop('mini_aprobadas',None)
+        facts.pop('tareas_aprobadas',None)
+    elif isinstance(accepted_goal,dict) and accepted_goal.get('meta'):
+        facts['meta']=accepted_goal['meta']
+        if accepted_goal.get('criterio'):
+            facts['criterio']=accepted_goal['criterio']
+        result['meta_verificable']=True
+        result['ambiguedad_esencial']=None
+    result['goal_validation']=(
+        {'meta':facts['meta'],'criterio':facts.get('criterio','')}
+        if facts.get('meta') and result['meta_verificable'] is True
+        and not result['ambiguedad_esencial'] else None)
+    return result
 
 
 def stage(snapshot):
