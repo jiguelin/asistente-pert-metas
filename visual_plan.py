@@ -85,6 +85,8 @@ def audit_visual(plan):
 
 def proposal_text(p):
     lines=[f"**Meta Principal:** {p['meta']}",f"**Plazo:** {p['inicio']} al {p['fin']}",f"**Punto de partida:** {p['situacion']}",f"**Obstáculo principal:** {p['principal']}",f"**Cómo afrontarlo desde el inicio:** {p['estrategia']}",'','**Mini metas propuestas**']
+    if p.get('criterio') and p['criterio'].casefold() not in p['meta'].casefold():
+        lines.insert(1,'**Condición del logro:** '+p['criterio'])
     for n in p['notas']:
         if n['tipo']=='M':lines.append(f"- **{n['id']} · {n['texto']}** — {n['fecha']}. {n['detalle']} Comprobación: {n['evidencia']}")
     lines+=['','**Tareas principales propuestas**']

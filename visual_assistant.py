@@ -17,7 +17,7 @@ KEYS=['meta','criterio','inicio','fin','situacion','obstaculos','principal','hab
 INTAKE=deepcopy(transport.INTAKE_SCHEMA)
 INTAKE['properties']['hechos']['items']['properties']['campo']['enum']=KEYS
 PROMPT='''Extrae exclusivamente los hechos del alumno para un mapa visual, sin hacer un plan.
-Usa hechos que dijo o propuestas que aceptó; no inventes. Cada hecho lleva cita literal corta de un mensaje de usuario e índice de ese mensaje (desde 0). Fechas ISO completas.
+Usa hechos que dijo o propuestas que aceptó; no inventes. Cada hecho lleva cita literal corta de un mensaje de usuario e índice de ese mensaje (desde 0). La cita debe ser un fragmento consecutivo: nunca unas frases separadas omitiendo texto intermedio. Una cita breve basta; no copies todo el valor. Fechas ISO completas.
 Campos: meta, criterio, inicio, fin, situacion, obstaculos, principal, habilidades, apoyos. Devuelve UN hecho por campo, consolidando todos sus datos vigentes en el valor: situación incluye todas las medidas iniciales y recursos; apoyos incluye todas las personas y recursos. Nunca devuelvas solo el último elemento de una lista. No recojas horas ni materiales. Reutiliza datos de todo el historial; un dato nuevo sustituye al anterior si el usuario lo corrige. Si hay saldo inicial o inventario ya hay situación actual.
 Meta verificable: resultado reconocible o cantidad suficiente. Caminar 5 km con buena energía y pesar 70 kg con abdomen marcado permiten avanzar. No persigas sinónimos de energía, ánimo o felicidad ni impongas condiciones clínicas. Una meta exclusivamente vaga sí necesita aclaración. ambiguedad_esencial solo si falta el logro central, usando un término literal del alumno; en otro caso null.
 meta_cambiada y cambio_meta_cita solo si el último mensaje cambia el logro central. Meta admitida no se reabre por preferencias personales.
@@ -42,7 +42,7 @@ def call(client,model,messages,prompt,schema,name,usage,tokens=4200):
     return json.loads(r.output_text)
 
 def accepted(text):
-    return bool(re.fullmatch(r'(?:s[ií](?:[, ]+(?:acepto|apruebo|me sirve|est[aá] bien))?|acepto|apruebo|de acuerdo|me sirve|ok|perfecto)[.! ]*',text.strip(),re.I))
+    return bool(re.fullmatch(r'(?:s[ií](?:[, ]+(?:acepto|apruebo|me sirve|est[aá] bien))?|acepto(?: la propuesta| esta ruta)?|apruebo(?: la propuesta| esta ruta)?|de acuerdo|me sirve(?: esta ruta| la propuesta)?|ok|perfecto)[.! ]*',text.strip(),re.I))
 
 def normalize_visual(payload,users,known=None,accepted_goal=None):
     # The extractor may emit one item per list member. Validate each quote
@@ -58,6 +58,12 @@ def normalize_visual(payload,users,known=None,accepted_goal=None):
                 if h['valor'] not in grouped[k]:grouped[k].append(h['valor'])
     snap=normalize(payload,users,known,accepted_goal)
     for k,values in grouped.items():snap['facts'][k]='; '.join(values)
+    # Explicit notebook labels are source evidence too, even if the model's
+    # citation accidentally joined non-contiguous sentences.
+    for k,label in [('habilidades',r'Habilidad(?:es)?(?: a aprender)?'),('apoyos',r'Apoyos?')]:
+        if not snap['facts'].get(k):
+            matches=[m.group(1).strip() for u in users for m in re.finditer(label+r'\s*:\s*([^.!?\n]+)',u,re.I)]
+            if matches:snap['facts'][k]=matches[-1]
     return snap
 
 
@@ -113,7 +119,7 @@ def respond(client,model,messages,today_lima,known_facts=None,accepted_goal=None
         prompt=instructions()+'''\nGenera una propuesta estructurada de mapa visual, no texto conversacional.
 Mantén exactamente meta, inicio y fin de los hechos. No inventes cifras como hechos ni garantías de viabilidad. Puedes proponer cantidades intermedias razonables, claramente propuestas, sin imponer progresiones lineales. Mantén las restricciones aportadas. Si hay una contradicción, explica la limitación en estrategia sin simular que se resolvió.
 Estrategia: una explicación concreta y breve de cómo empezar a afrontar el obstáculo principal usando habilidades/apoyos/tareas. Si no hay obstáculo no lo inventes. Identifica una primera acción concreta para afrontarlo desde el inicio; no basta decir «mantener constancia» o «usar apoyos». No tienes que bloquear todas las líneas hasta resolverlo.
-Notas: IDs M1..., T1..., H1..., O1..., A1... y MP. Cada etiqueta tiene 2–5 palabras (máximo 7); detalle conserva lo necesario. M y MP expresan resultado logrado y evidencia sencilla. No impongas mini metas por mes ni repitas el logro final. Cada mini meta debe permitir responder sí/no con una comprobación sencilla. Evita «base estable», «avance consolidado», «cerca del objetivo», «en marcha» o «la mayoría» sin definir el resultado. Puedes proponer «Primer mes de práctica completado» con evidencia de la pauta acordada seguida, o «Primeras 3 ventas cobradas», sin detallar sesiones. Un resultado preparatorio debe preceder a sus consecuencias, por ejemplo acordar la pauta antes de completar un mes siguiéndola. Propón normalmente 2–5 mini metas significativas, sin cuota obligatoria. Una a tres tareas por resultado como máximo, y cero cuando no hacen falta; normalmente bastan 2–5 tareas en todo el mapa. No tareas por hábito diario ni sesiones. No propongas «armar el PERT», «ordenar el cuaderno» ni «hacer un plan» como sustituto del trabajo necesario para lograr la meta. Sí cabe acordar una pauta específica con un apoyo cuando eso habilite acciones reales. Una tarea compartida aparece una sola vez, para=[IDs de resultados]. Para otras notas para=[].
+Notas: IDs M1..., T1..., H1..., O1..., A1... y MP. Cada etiqueta tiene 2–5 palabras (máximo 7); detalle conserva lo necesario. M y MP expresan resultado logrado y evidencia sencilla. No impongas mini metas por mes ni repitas el logro final. Cada mini meta debe permitir responder sí/no con una comprobación sencilla. Evita «base estable», «avance consolidado», «cerca del objetivo», «en marcha» o «la mayoría» sin definir el resultado. Puedes proponer «Primer mes de práctica completado» con evidencia de la pauta acordada seguida, o «Primeras 3 ventas cobradas», sin detallar sesiones. Un resultado preparatorio debe preceder a sus consecuencias, por ejemplo acordar la pauta antes de completar un mes siguiéndola. Si propones un mes de práctica y la pauta se acuerda el 10 de octubre, ese mes no termina el 31 de octubre: deja al menos un mes de calendario. Evita fechas incompatibles con el propio nombre de la mini meta. Propón normalmente 2–5 mini metas significativas, sin cuota obligatoria. Una a tres tareas por resultado como máximo, y cero cuando no hacen falta; normalmente bastan 2–5 tareas en todo el mapa. No tareas por hábito diario ni sesiones. No propongas «armar el PERT», «ordenar el cuaderno» ni «hacer un plan» como sustituto del trabajo necesario para lograr la meta. Sí cabe acordar una pauta específica con un apoyo cuando eso habilite acciones reales. No sustituyas la acción principal por pura preparación o revisión: si el resultado requiere practicar, entrenar, vender o ejecutar una campaña, considera esa acción amplia como una única tarea, sin desglosarla en sesiones. No afirmes que un apoyo aceptó un encargo nuevo; formula su participación como propuesta. Una tarea compartida aparece una sola vez, para=[IDs de resultados]. Para otras notas para=[].
 Fecha en notas: M/MP fecha de logro; T ubicación orientativa para empezar la acción principal; H/O/A inicio salvo razón aportada. MP fecha final. Todas dentro del plazo. No es una hora ni duración. Evidencia puede estar vacía solo para T/H/O/A.
 Incluye obstáculos, habilidades y apoyos relevantes declarados. Puedes agrupar equivalentes con detalle completo, sin más de 6 notas de un tipo en el mismo periodo. Identifica el principal en la nota de obstáculo. No inventes apoyos o habilidades ya adquiridas.
 Conexiones: pocas y relevantes. «antes» solo de un resultado M a otro resultado o tarea que realmente depende de haberlo logrado; fecha previa <= siguiente. Para T hacia resultados usa «contribuye»: su fecha representa el inicio, no la terminación. H/O/A usan contribuye/riesgo/apoyo. No encadenes tareas independientes. Explica el orden y las líneas paralelas en secuencia, máximo 80 palabras. No describas papelógrafos, columnas, materiales ni montaje en secuencia: la aplicación los calcula después. Incluye solo relaciones relevantes y no conectes indiscriminadamente todas las notas a MP.
@@ -126,6 +132,7 @@ Antes de responder revisa significado de resultados, fidelidad a la meta, estrat
             plan=call(client,model,[{'role':'user','content':json.dumps(plan,ensure_ascii=False)}],prompt+'\nCorrige este error estructural: '+str(exc),PLAN,'visual_repair',usage,5200)
             for k in ['meta','inicio','fin','situacion','principal']:plan[k]=f[k]
             audit_visual(plan)
+        plan['criterio']=f.get('criterio','')
         f['_visual_proposal']=plan
         return proposal_text(plan)+'\n\n¿Te sirve esta ruta o quieres ajustar algo?',False,usage
     finally:transport.TURN_DEADLINE.reset(token)

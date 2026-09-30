@@ -19,6 +19,7 @@ def export_visual_pdf(audit):
     out=[]
     def add(text,style=body):out.append(_p(text,style))
     add('Mi mapa visual de metas',title);add('META PRINCIPAL',heading);add(p['meta'])
+    if p.get('criterio') and p['criterio'].casefold() not in p['meta'].casefold():add(p['criterio'])
     add(f"Inicio: {p['inicio']} · Fecha límite: {p['fin']} · {audit['dias_inclusivos']} días inclusivos")
     add('Punto de partida',heading);add(p['situacion'])
     add('La piedra principal en el camino',heading);add(p['principal']);add(p['estrategia'])
@@ -36,7 +37,7 @@ def export_visual_pdf(audit):
             for j in group:
                 ns=[n for n in p['notas'] if n['tipo']==t and n.get('periodo')==j]
                 row.append(_p('\n\n'.join(n['id']+' · '+n['texto'] for n in ns) or 'Espacio libre',small))
-            if last:row.append(_p('MP\n'+p['meta'] if t=='M' else '',small))
+            if last:row.append(_p('MP\n'+p['meta']+('\n'+p.get('criterio','') if p.get('criterio','').casefold() not in p['meta'].casefold() else '') if t=='M' else '',small))
             rows.append(row)
         zone=145 if last else 0; width=(doc.width-90-zone)/len(group)
         table=Table(rows,colWidths=[90]+[width]*len(group)+([zone] if last else []),repeatRows=1)

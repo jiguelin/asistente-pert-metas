@@ -62,6 +62,11 @@ class VisualTests(unittest.TestCase):
         self.assertIn('66.5',f['situacion']);self.assertIn('Energía',f['situacion'])
         self.assertIn('hermana',f['apoyos']);self.assertIn('courier',f['apoyos'])
 
+    def test_notebook_label_survives_bad_model_quote(self):
+        user='Ahora sé fórmulas básicas. No tengo obstáculos. Habilidad a aprender: tablas dinámicas.'
+        payload={'ambiguedad_esencial':None,'meta_verificable':False,'meta_cambiada':False,'cambio_meta_cita':None,'hechos':[{'campo':'habilidades','valor':'tablas dinámicas','usuario':0,'cita':'Ahora sé fórmulas básicas. Habilidad a aprender: tablas dinámicas'}]}
+        self.assertEqual(va.normalize_visual(payload,[user])['facts']['habilidades'],'tablas dinámicas')
+
     def test_prompt_bounds_and_strategy(self):
         self.assertLess(len(va.instructions()),8000)
         self.assertIn('obstáculo principal',va.instructions());self.assertIn('No calcules horas',va.instructions())
